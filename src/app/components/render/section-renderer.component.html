@@ -1,0 +1,29 @@
+<section class="fs-section" [ngClass]="depthClass" [attr.id]="section.id" [attr.data-scroll-id]="section.id">
+
+  <div class="fs-section__header">
+    <input *ngIf="section.inlineControl as cb"
+           [type]="cb.fieldType === 'radio' ? 'radio' : 'checkbox'"
+           class="fs-section__inline-check mr-5"
+           [checked]="isChecked(cb)" (change)="toggle(cb)" />
+    <h4 class="fs-section__title">{{ section.title }}</h4>
+  </div>
+
+  <div class="fs-section__body">
+    <ng-container *ngFor="let el of section.elements; trackBy: trackByIndex">
+
+      <p *ngIf="asText(el) as t"
+         class="fs-text"
+         [ngClass]="isNote(t.text) ? 'fs-text--note' : ('fs-text--' + t.style)">{{ t.text }}</p>
+
+      <fs-field-row *ngIf="asFieldRow(el) as fields"
+        [fields]="fields" [parentGroup]="parentGroup">
+      </fs-field-row>
+
+      <fs-radio-group *ngIf="asRadioGroup(el) as g"
+        [group]="g" [control]="control(g.controlKey)">
+      </fs-radio-group>
+
+      <fs-table *ngIf="asTable(el) as tbl" [table]="tbl" [parentGroup]="parentGroup"></fs-table>
+    </ng-container>
+  </div>
+</section>

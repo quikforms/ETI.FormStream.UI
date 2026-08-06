@@ -1,0 +1,209 @@
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.form-navigator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.form-counter {
+  font-size: 14px;
+  color: var(--fs-gray-90);
+  font-weight: 500;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.chevron-btn {
+  background: none;
+  border: none;
+  color: var(--fs-gray-90);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.chevron-btn:hover {
+  background-color: var(--fs-foreground);
+  color: var(--fs-gray-101);
+}
+
+/*FORM SUMMARIES*/
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.form-item {
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--fs-gray-20); 
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
+}
+
+.form-item:hover {
+  border-color: var(--fs-gray-30);
+}
+
+.form-item-active:hover {
+  border-color: var(--fs-accent-border);
+}
+
+.form-item-active {
+  background-color: var(--fs-accent-wash);
+  border-color: var(--fs-accent-soft);
+}
+
+.form-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.form-item-name {
+  display: inline-block;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  color: var(--fs-gray-100);
+  margin: 0;
+}
+
+.form-number {
+  color: var(--fs-gray-50);
+  font-weight: bold;
+}
+
+.form-number.active-number {
+  color: var(--fs-accent);
+  font-weight: bold;
+}
+
+.active-badge {
+  background-color: var(--fs-accent-tint);
+  color: var(--fs-accent-strong);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+.form-item-id {
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--fs-gray-60);
+  margin-left: 5px;
+}
+
+.form-item-metrics {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.form-item-percent {
+  font-weight: bold;
+  color: var(--fs-accent);
+}
+
+.form-item-missing {
+  color: var(--fs-gray-50);
+}
+
+.form-item-header fs-icon {
+  color: var(--fs-gray-50);
+  font-size: 0.6em;
+}
+
+.form-item-header fs-icon.active-dot {
+  color: var(--fs-accent);
+}
+
+/* ---- Shell layout & identity (semantic; replaces former utility-class usage) ---- */
+.fs-shell {
+  padding-top: 30px;
+}
+
+.fs-shell__header-row {
+  margin-bottom: 20px;
+}
+
+.fs-shell__subtitle {
+  font-size: 15px;
+  line-height: 1.2;
+  margin-left: 30px;
+}
+
+.fs-card {
+  margin-bottom: 20px;
+}
+
+.fs-form-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 0;
+}
+
+.fs-form-desc {
+  margin: 10px 0 0;
+  color: var(--fs-gray-70);
+}
+
+.fs-renderer-wrap {
+  margin-top: 20px;
+}
+
+.fs-sidebar-title {
+  margin-bottom: 15px;
+}
+
+.fs-popover-label {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--fs-gray-100);
+  margin-bottom: 12px;
+}
+
+.fs-section-link-item {
+  margin-bottom: 10px;
+}
+
+.fs-actions__attachments {
+  margin-bottom: 10px;
+}
+
+.fs-action {
+  margin-bottom: 20px;
+
+  fs-icon {
+    margin-right: 3px;
+  }
+}
+
+.fs-action--last {
+  margin-bottom: 0;
+}
+
+.fs-attachments__header fs-icon {
+  margin-right: 3px;
+}
+
+.fs-shell__footer-logo {
+  padding-top: 40px;
+}

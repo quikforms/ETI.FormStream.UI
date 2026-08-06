@@ -1,0 +1,59 @@
+<div class="modal-dialog default-data settings" #repmodal>
+
+    <div class="close">
+        <fs-icon name="xmark" class="pointer" (click)="close()" aria-label="Close" aria-hidden="true"></fs-icon>
+    </div>
+
+    <div class="modal-content">
+
+        <div *ngIf="loading$ | async" class="fs-attachments__loading-overlay">
+            <fs-icon name="spinner" [spin]="true" class="fs-icon--3x"></fs-icon>
+        </div>
+
+        <div class="modal-header">
+            <h2 class="fs-attachments__title">Upload Attachments</h2>
+            <p>Add supporting documents to be included with this package.</p>
+        </div>
+
+        <div class="modal-body">
+
+            <div class="fs-attachments__field">
+                <label class="fs-label">Select Files:</label>
+                <div class="fs-attachments__file-input" (click)="file.click()">
+                    <button type="button" class="fs-btn main-color ease fs-attachments__file-btn">Choose Files</button>
+                    <span class="fs-attachments__file-placeholder" *ngIf="(selectedFiles$ | async)?.length === 0">No file chosen</span>
+                </div>
+                <input class="fs-attachments__file-hidden" type="file" multiple onclick="this.value = null" (change)="onSelectFiles($event)" accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.tif,.tiff" #file/>
+                <small class="fs-attachments__accepted-formats">Accepted formats: PDF, JPG, PNG, GIF, BMP, TIF</small>
+            </div>
+
+            <div *ngIf="(selectedFiles$ | async)?.length > 0" class="fs-attachments__field">
+                <div *ngFor="let selectedFile of selectedFiles$ | async" class="fs-attachments__row">
+                  <div class="fs-attachments__meta">
+                    <span class="fs-attachments__name">{{selectedFile.file.name}}</span>
+                  </div>
+                  <span class="fs-attachments__remove" role="presentation" (click)="revomeSelectedFile(selectedFile.id)">&#x2715;</span>
+                </div>
+            </div>
+
+            <div class="fs-attachments__field">
+                <label class="fs-label">Attachment Position:
+                    <fs-icon name="circle-info" class="fs-attachments__info-icon"
+                       tooltip="Determines where uploaded attachments are placed. All attachments will appear either before or after the form based on your selection. 'After Form' is the default."
+                       placement="top"></fs-icon>
+                </label>
+                <select class="fs-input" [(ngModel)]="addBeforeForms">
+                    <option [ngValue]="true">Before form</option>
+                    <option [ngValue]="false">After form</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="modal-footer text-right">
+            <button class="fs-btn main-color ease" [disabled]="(selectedFiles$ | async)?.length === 0" (click)="uploadSelectedFiles()">Save <span *ngIf="(selectedFiles$ | async)?.length > 0">({{ (selectedFiles$ | async)?.length }})</span></button>
+        </div>
+
+    </div>
+
+</div>

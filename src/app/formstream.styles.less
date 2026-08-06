@@ -1,0 +1,1035 @@
+/*
+ * FormStream UI — global styles (shell-shared components + modals/overlays).
+ * Colors come from the OKLch token system (render.tokens.less). Shell/identity styling
+ * lives in the component .less files; this file holds the shared global surface.
+ */
+
+/*  Local font (Source Sans Pro, base64-inlined — no network dependency)  */
+@import './fonts.less';
+
+/*  Design tokens (single OKLch token system)  */
+@import './components/render/render.tokens.less';
+
+/*  XL grid  */
+@import './bootstrap-xlgrid.css';
+
+/* Focus ring mixin (used by .fs-btn / .fs-input :focus-visible) */
+.focus-ring() {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--fs-color-focus-ring);
+}
+
+/* Custom scrollbar — subtle, rounded, identity-gray; harmonizes with the rounded surfaces.
+   Applied only to the element's own scroll containers (not the host page). The transparent
+   border + padding-box clip insets the thumb so it reads as a slim, padded pill. */
+.fs-scrollbar(@size: 10px; @thumb: var(--fs-gray-40); @thumb-hover: var(--fs-gray-60); @track-inset: 0) {
+    /* WebKit/Blink only (Chrome/Edge/Safari). The standard `scrollbar-width`/`scrollbar-color`
+       are intentionally NOT set: in Chrome 121+ those take precedence and disable the
+       `::-webkit-scrollbar` pseudo-elements, which would drop the rounded thumb / exact size /
+       track inset. Firefox falls back to its native scrollbar. */
+    &::-webkit-scrollbar {
+        width: @size;
+        height: @size;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+        /* Inset the track vertically so the thumb clears a rounded container's corners. */
+        margin: @track-inset 0;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: @thumb;
+        border-radius: 999px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background-color: @thumb-hover;
+    }
+}
+
+/* Base layout — scoped to the element host so it does NOT restyle the embedding page.
+   Page-level height/width/overflow are the host's responsibility (the Quik! App host sets `body`
+   overflow; the inner `.formstream` provides its own scroller), so they are dropped here. */
+quik-formstream {
+    display: block;
+    background: var(--fs-gray-10);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 15px;
+    line-height: 1.3;
+    font-weight: 400;
+    color: var(--fs-gray-100);
+}
+
+quik-formstream *:focus,
+quik-formstream input:focus {
+    outline: 0 !important;
+}
+
+quik-formstream iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+}
+
+quik-formstream hr {
+    border: 0;
+    border-top: 1px solid var(--fs-gray-30);
+}
+
+quik-formstream hr.simple {
+    margin-bottom: 30px;
+    margin-top: 10px;
+}
+
+/* Lists */
+quik-formstream ul {
+    list-style: none;
+    display: block;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+/* ---- Minimal utility layer (intentional, documented) ----
+   Flex/grid primitives the shell + modals rely on. Bootstrap 3 (globally imported) ships
+   no flex/spacing utilities, so these are the element's own. The former V1 utility-soup
+   (the mb-, mt-, font-, color-, h3-new, sm and inline classes) was replaced by semantic
+   component styles. */
+.d-flex {
+    display: flex !important;
+}
+
+.align-items-end {
+    align-items: flex-end !important;
+}
+
+.align-items-center {
+    align-items: center !important;
+}
+
+.justify-content-between {
+    justify-content: space-between !important;
+}
+
+.w-100 {
+    width: 100% !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+/* Widen the content area: the Bootstrap .container's fixed max-width left large dead margins on
+   both sides, which squeezed wide form tables into a horizontal scroll. Use most of the viewport
+   instead so the main (left) column gains width. Experimental — dial the side margin back up if
+   it reads too wide on large monitors. */
+.container {
+    width: auto !important;
+    max-width: none !important;
+    /* Asymmetric on purpose: more left margin clears the fixed "View Sections" tab, less right
+       margin reclaims the spare space there — the block shifts right without losing width. */
+    margin-left: 100px !important;
+    margin-right: 40px !important;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.col-md-12 {
+    flex: 0 0 auto;
+    width: 100%;
+}
+
+/* Self-contained flex grid so the shell's two-column layout (content + sidebar) does not
+   depend on the host page providing Bootstrap-4-style grid utilities. */
+.col {
+    flex: 1 1 0%;
+    min-width: 0;
+}
+
+.col-auto {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+/* Inline SVG icons (see the fs-icon component) — sized and coloured like an icon-font glyph
+   so the element ships its own icons and needs no icon font on the host page. */
+.fs-icon {
+    display: inline-flex;
+    width: 1em;
+    height: 1em;
+    line-height: 1;
+    vertical-align: -0.125em;
+}
+
+.fs-icon svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+}
+
+.fs-icon--lg { font-size: 1.33em; }
+.fs-icon--sm { font-size: 0.875em; }
+.fs-icon--3x { font-size: 3em; }
+.fs-icon--5x { font-size: 5em; }
+
+.fs-icon--spin svg {
+    animation: fs-icon-spin 1s linear infinite;
+}
+
+@keyframes fs-icon-spin {
+    to { transform: rotate(360deg); }
+}
+
+.col-md-10 {
+    flex: 0 0 auto;
+    width: 83.33333333%;
+}
+
+.col-md-2 {
+    flex: 0 0 auto;
+    width: 16.66666667%;
+}
+
+/* Cards */
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: var(--fs-foreground);
+    background-clip: border-box;
+    border-radius: .5rem;
+    box-shadow: none;
+
+    &.transparent {
+        background: transparent;
+        border: none;
+    }
+
+    &:hover,
+    &:focus {
+        color: inherit;
+        box-shadow: none;
+    }
+
+    &:not(.active):hover hr {
+        border-color: var(--fs-gray-30);
+    }
+}
+
+.card-body {
+    flex: 1 1 auto;
+    padding: 0 20px 20px;
+}
+
+.card-header {
+    padding: 20px 20px 0;
+    margin-bottom: 0;
+
+    h3 {
+        margin-bottom: 0;
+    }
+}
+
+/* Branding */
+.logo {
+    height: 28px;
+
+    &.lg {
+        height: 38px;
+    }
+}
+
+/* Spacing utilities (used by the notification close icon + render inline-check) */
+.ml-5 {
+    margin-left: 5px;
+}
+
+.mr-5 {
+    margin-right: 5px;
+}
+
+/* Buttons */
+quik-formstream .btn,
+quik-formstream button {
+    text-transform: uppercase;
+    background-color: transparent;
+    color: var(--fs-gray-101);
+    font-weight: 600;
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
+    border-radius: 5px;
+}
+
+.fs-btn {
+    height: 38px;
+    min-width: 100px;
+    padding: 10px 20px;
+    /* Reset the native <button> border: standalone (no host CSS reset) plain .fs-btns would
+       otherwise show the browser's default `2px outset` border. Elevation comes from box-shadow. */
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    text-transform: uppercase;
+    color: var(--fs-brand);
+    background-color: var(--fs-white);
+    box-shadow: 1px 1px 3px rgba(202, 205, 205, 0.5);
+
+    &.lg {
+        height: 48px;
+        min-width: 200px;
+        padding: 10px 14px;
+        font-size: 15px;
+    }
+
+    &.ok {
+        background-color: var(--fs-green);
+        color: var(--fs-white);
+
+        &:hover,
+        &:focus {
+            background-color: var(--fs-green-strong);
+            box-shadow: none;
+        }
+
+        &:active {
+            box-shadow: inset 2px 2px 5px rgba(54, 57, 57, 0.25);
+        }
+    }
+
+    /* Primary action (modal Save/OK) — aligned to the Quik! App host's blue button. */
+    &.main-color {
+        background-color: var(--fs-host-primary);
+        color: var(--fs-white);
+
+        &:hover,
+        &:focus {
+            background-color: var(--fs-host-primary-strong);
+            box-shadow: none;
+        }
+
+        &:active {
+            background-color: var(--fs-host-primary-strong);
+            box-shadow: inset 2px 2px 5px rgba(54, 57, 57, 0.25);
+        }
+    }
+
+    &:hover {
+        background-color: var(--fs-brand);
+        color: var(--fs-white);
+        box-shadow: none;
+
+        i {
+            color: var(--fs-white);
+        }
+    }
+
+    &:disabled,
+    &.disabled {
+        background-color: var(--fs-gray-30);
+        color: var(--fs-gray-60) !important;
+        border: none;
+        cursor: not-allowed;
+
+        &:hover,
+        &:active,
+        &:focus {
+            background-color: var(--fs-gray-30);
+            color: inherit;
+            box-shadow: inherit;
+        }
+    }
+
+    transition: background-color .15s ease, color .15s ease, box-shadow .15s ease, transform .06s ease;
+
+    &:active {
+        transform: translateY(1px);
+    }
+
+    &:focus-visible {
+        .focus-ring();
+    }
+
+    &.ok:focus-visible {
+        .focus-ring();
+    }
+}
+
+/* Inputs */
+.fs-input {
+    height: 38px !important;
+    padding: 9px 10px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--fs-gray-30);
+    background-color: var(--fs-white);
+    width: 100%;
+    line-height: 1.2;
+
+    &::placeholder {
+        font-style: italic;
+        color: var(--fs-gray-60);
+    }
+
+    transition: border-color .12s ease, box-shadow .12s ease;
+
+    &:focus {
+        border-color: var(--fs-brand);
+    }
+
+    &:focus-visible {
+        .focus-ring();
+    }
+}
+
+.fs-attachments {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &__header {
+        font-weight: 700;
+        color: var(--fs-gray-100);
+    }
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--fs-gray-30);
+    }
+
+    &__row:last-of-type {
+        border-bottom: none;
+    }
+
+    &__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: var(--fs-gray-70);
+        font-size: 13px;
+    }
+
+    &__name {
+        font-weight: 600;
+        color: var(--fs-gray-100);
+    }
+
+    &__size {
+        color: var(--fs-gray-60);
+    }
+
+    &__position {
+        color: var(--fs-gray-60);
+        font-style: italic;
+    }
+
+    &__remove {
+        color: var(--fs-red);
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+        padding-left: 10px;
+        user-select: none;
+    }
+
+    &__file-input {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--fs-gray-30);
+        border-radius: 5px;
+        background-color: var(--fs-white);
+        padding: 4px 10px 4px 4px;
+        cursor: pointer;
+        min-height: 38px;
+        gap: 10px;
+    }
+
+    &__file-placeholder {
+        color: var(--fs-gray-60);
+        font-style: italic;
+        font-size: 13px;
+    }
+
+    &__file-btn {
+        flex-shrink: 0;
+        height: 30px;
+        min-width: auto;
+        padding: 6px 14px;
+        font-size: 12px;
+    }
+
+    &__file-hidden {
+        display: none !important;
+    }
+
+    &__accepted-formats {
+        display: block;
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--fs-gray-60);
+        font-style: italic;
+    }
+
+    &__info-icon {
+        color: var(--fs-gray-60);
+        font-size: 14px;
+        margin-left: 4px;
+        cursor: help;
+    }
+
+    &__loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(238, 238, 238, 0.7);
+        z-index: 10;
+        border-radius: 15px;
+
+        i {
+            color: var(--fs-gray-80);
+        }
+    }
+}
+
+.fs-label {
+    font-size: 13px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--fs-gray-60);
+    margin-bottom: 10px;
+
+    &.req::after {
+        content: "•";
+        color: var(--fs-red);
+        margin-left: 5px;
+        font-size: 15px;
+        line-height: 1;
+    }
+}
+
+.fs-label.sm {
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.fs-link {
+    text-decoration: none;
+
+    &:hover {
+        color: var(--fs-brand);
+        text-decoration: none;
+    }
+}
+
+/* Popovers */
+.popover {
+    max-width: 276px;
+    font-size: 1rem;
+    font-family: inherit;
+    border: none;
+    border-radius: 8px;
+    color: var(--fs-white);
+    padding: 0;
+    background-color: var(--fs-brand);
+}
+
+.popover-body {
+    padding: .5rem .75rem;
+    font-size: inherit;
+    background-color: var(--fs-white);
+    color: var(--fs-gray-100);
+    border-radius: calc(.3rem - 1px);
+}
+
+.bs-popover-right {
+    margin-left: .5rem;
+}
+
+.bs-popover-bottom {
+    margin-top: 1rem;
+}
+
+.popover.show,
+.popover.in {
+    opacity: 1 !important;
+}
+
+/* Form Stream layout */
+.formstream {
+    /* Inner scroll container. The host keeps `body { overflow-y: hidden }` and
+       each routed page provides its own scroller. Subtract the 40px fixed top
+       navbar (`.navbar-signature` is 40px; `body main` adds `padding-top: 40px`)
+       so the form fills exactly the visible area and scrolls to the very bottom. */
+    height: calc(100vh - 40px);
+    overflow-y: auto;
+    /* Primary scroller: larger + darker than secondary scrollbars. */
+    .fs-scrollbar(14px; var(--fs-gray-60); var(--fs-gray-70));
+
+    /* The main scrollbar keeps up/down arrow buttons. Customizing a WebKit scrollbar drops
+       the native OS arrows, so they are re-drawn here (gray triangles matching the identity);
+       secondary scrollbars stay arrowless. The two unused double-button slots are hidden. */
+    &::-webkit-scrollbar-button:vertical:start:decrement,
+    &::-webkit-scrollbar-button:vertical:end:increment {
+        display: block;
+        height: 16px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 9px;
+    }
+
+    &::-webkit-scrollbar-button:vertical:start:decrement {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath fill='%23717979' d='M4 2.5 6.8 5.5 1.2 5.5z'/%3E%3C/svg%3E");
+    }
+
+    &::-webkit-scrollbar-button:vertical:end:increment {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath fill='%23717979' d='M4 5.5 1.2 2.5 6.8 2.5z'/%3E%3C/svg%3E");
+    }
+
+    &::-webkit-scrollbar-button:vertical:start:increment,
+    &::-webkit-scrollbar-button:vertical:end:decrement {
+        display: none;
+    }
+
+    .card-header {
+        padding: 20px 20px 10px;
+    }
+
+    .card-body {
+        padding: 10px 20px 20px;
+        min-width: 0;
+    }
+
+    /* Let the main content column shrink below its content's intrinsic width so a
+       wide descendant (e.g. a 6-column table) is contained by its own
+       overflow-x:auto wrapper instead of blowing out the whole card. */
+    .col {
+        min-width: 0;
+    }
+
+    .card-body .row+.row {
+        margin-top: 5px;
+    }
+
+    label>input[type="radio"],
+    label>input[type="checkbox"] {
+        vertical-align: middle;
+    }
+
+    .view-sections-tab {
+        position: fixed;
+        rotate: 270deg;
+        left: 12px;
+        top: 300px;
+        transform: translateY(-50%);
+        z-index: 1000;
+        border-radius: 10px;
+        padding: 7px 12px;
+        color: var(--fs-blue);
+        background: var(--fs-white);
+        border: none;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+        text-transform: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: box-shadow .15s ease, transform .06s ease;
+
+        &:hover {
+            box-shadow: 0 12px 22px rgba(0, 0, 0, .16);
+        }
+
+        &:active {
+            transform: translateY(calc(-50% + 1px));
+        }
+    }
+
+    .sections-popover {
+        position: fixed;
+        left: 58px;
+        top: 417px;
+        transform: translateY(-50%);
+        min-width: 280px;
+        max-width: 300px;
+        border: none;
+        border-radius: 16px;
+        /* Clip the inner scroller (and its scrollbar) to the rounded shape so ALL four
+           corners stay rounded; the scrolling happens on .popover-body. */
+        overflow: hidden;
+        background: var(--fs-white);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, .18);
+        z-index: 1000;
+    }
+
+    .sections-popover .popover-body {
+        padding: 16px 18px;
+        max-height: 300px;
+        overflow-y: auto;
+        /* Secondary scroller: smaller + lighter, with the track inset so it clears the
+           popover's 16px rounded corners. */
+        .fs-scrollbar(7px; var(--fs-gray-30); var(--fs-gray-40); 14px);
+    }
+
+    .sections-popover .sections-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .sections-popover .sections-list .fs-section-link {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.35;
+        color: var(--fs-blue);
+        text-decoration: none;
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+
+        &:hover {
+            background: var(--fs-foreground);
+        }
+    }
+
+    /* Right sidebar: natural document flow by default (progressive-enhancement baseline —
+       fully reachable via the page scroll, and what reduced-motion users keep).
+       ProportionalScrollDirective adds `is-synced` when it can pin + scroll-link the panel
+       to the main column so both reach the bottom together. */
+    .fs-sidebar {
+        align-self: flex-start;
+    }
+
+    /* pinned: a sidebar shorter than the viewport stays put while the main column scrolls. */
+    .fs-sidebar.is-pinned {
+        position: sticky;
+        top: 20px;
+    }
+
+    /* synced: an overflowing sidebar is clipped to the viewport and scroll-linked (the track
+       is translated by the directive). Applied together with is-pinned. */
+    .fs-sidebar.is-synced {
+        height: calc(100vh - 80px);
+        overflow: hidden;
+    }
+
+    .fs-sidebar.is-synced .fs-sidebar__track {
+        will-change: transform;
+    }
+}
+
+quik-formstream label input[type="radio"]+span {
+    font-weight: 400;
+}
+
+quik-formstream label input[type=radio] {
+    margin: 0;
+}
+
+.fs-sidebar {
+
+    /* Gutter between the content column and the sidebar (self-contained, since the element
+       no longer relies on the host's grid gutters). */
+    padding-left: 24px;
+
+    .active {
+        font-weight: 700;
+        color: var(--fs-gray-100);
+    }
+
+    .fs-link {
+        font-weight: 700;
+        color: var(--fs-gray-100);
+    }
+}
+
+/********************************************************************** 15. MODALS */
+
+.modal {
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 999999;
+    overflow-y: auto;
+    font-size: 15px;
+}
+
+.modal-body {
+    padding: 30px 30px 20px;
+}
+
+@media (min-width: 768px) {
+
+    .modal-dialog {
+        height: calc(100% - 100px);
+        width: auto;
+        margin: auto;
+
+        .settings,
+        .regular {
+            width: 600px;
+            height: auto;
+            margin: 0 auto;
+            border-radius: 0.5rem;
+            position: relative;
+        }
+
+        .close {
+            color: var(--fs-white);
+            position: absolute;
+            right: -40px;
+            top: 0;
+            text-shadow: none;
+            opacity: 1;
+            font-size: 2rem;
+        }
+
+        .modal-dialog {
+            height: auto;
+            width: 640px;
+            margin: 5% auto 0;
+            padding-top: 35px;
+
+            &.sm {
+                width: 450px
+            }
+
+            &.xs {
+                width: 350px;
+            }
+
+            &.reg {
+                width: 60%
+            }
+
+            &.lg {
+                width: 80%
+            }
+
+            .close {
+                color: var(--fs-white);
+                position: absolute;
+                right: 0;
+                top: 0;
+                text-shadow: none;
+                opacity: 1;
+                font-size: 2rem;
+            }
+        }
+
+    }
+}
+
+.modal-header {
+    border: 0;
+    padding-bottom: 10px;
+
+    .badge {
+        position: absolute;
+        top: -35px;
+        right: 50%;
+        width: 70px;
+        height: 70px;
+        margin-right: -35px;
+        border-radius: 50%;
+        padding: 20px;
+        color: var(--fs-gray-100);
+        background-color: var(--fs-background);
+        margin-bottom: 0;
+
+        i {
+            font-size: 1.5rem;
+            margin-top: 5px;
+        }
+    }
+}
+
+.modal-content {
+    background-color: transparent;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    height: 100%;
+
+    .modal-content {
+        border-radius: 15px;
+        background-color: var(--fs-background);
+        -webkit-box-shadow: none;
+        box-shadow: none;
+
+        label {
+            font-size: 13px
+        }
+    }
+}
+
+.modal-footer {
+    border-top: none;
+    text-align: center;
+}
+
+.modal-top {
+    display: inline-block;
+}
+
+.overlay {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.7);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999999999;
+
+    &.overlay-settings {
+        padding-left: 350px;
+        padding-top: 90px;
+    }
+}
+
+.loading {
+    z-index: 99999999;
+    left: calc(50% - 20px);
+    top: calc(50% - 20px);
+    text-align: center;
+    position: absolute;
+}
+
+/********************************************************************** Attachments Modal Overrides */
+
+.modal-dialog.default-data.settings {
+    position: relative;
+    max-width: 450px;
+    /* This component's root is itself a `.modal-dialog`, nested inside ngx-bootstrap's own
+       `.modal-dialog` wrapper, so it inherits the generic `.modal-dialog .modal-dialog`
+       padding-top that would push the card down and leave the close (top:15px) floating above
+       it. Neutralize it here so the close sits inside the card's top-right corner. */
+    padding-top: 0;
+
+    > .close {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        color: var(--fs-gray-80);
+        font-size: 1.5rem;
+        z-index: 11;
+        text-shadow: none;
+        opacity: 1;
+    }
+
+    .modal-content {
+        position: relative;
+        border-radius: 15px;
+        background-color: var(--fs-background);
+        box-shadow: none;
+    }
+
+    .modal-header {
+        padding: 30px 30px 0;
+
+        h2 {
+            margin-bottom: 0;
+        }
+
+        p {
+            margin-top: 8px;
+            margin-bottom: 0;
+            line-height: 1.4;
+        }
+    }
+
+    .modal-body .col-auto {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .modal-footer {
+        padding: 10px 30px 30px;
+        display: flex;
+        justify-content: flex-end;
+    }
+}
+
+/********************************************************************** Modal close (X) — styled like the Quik! App host */
+
+.modal-dialog .close fs-icon {
+    color: var(--fs-gray-101);
+    opacity: 1;
+    font-size: 18px;
+    font-weight: normal;
+    text-shadow: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color .2s ease, opacity .2s ease;
+
+    &:hover {
+        background-color: var(--fs-foreground);
+        opacity: 0.8;
+    }
+}
+
+/********************************************************************** Tooltips */
+
+.tooltip {
+    z-index: 1000000;
+    /* The bundled Bootstrap 3 makes tooltips semi-transparent (`.tooltip.in { opacity: .9 }`);
+       the host renders them solid. Force full opacity so the background reads as solid. */
+    opacity: 1;
+
+    &.in,
+    &.show {
+        opacity: 1;
+    }
+}
+
+.tooltip-inner {
+    max-width: 280px;
+    padding: 8px 12px;
+    font-size: 13px;
+    line-height: 1.4;
+    background-color: var(--fs-host-primary);
+    color: var(--fs-white);
+    border-radius: 5px;
+    text-align: left;
+}
+
+/* Multi-line variant (containerClass="fs-tooltip-multiline"): preserves the line breaks used to list
+   items one per line, e.g. the FORMS INCLUDED cell. Needed because tooltips mount on document.body,
+   outside the element's scoped styles. */
+.fs-tooltip-multiline .tooltip-inner {
+    white-space: pre-line;
+}
+
+.bs-tooltip-top .arrow::before {
+    border-top-color: var(--fs-host-primary);
+}
+
+.bs-tooltip-bottom .arrow::before {
+    border-bottom-color: var(--fs-host-primary);
+}
+
+.bs-tooltip-left .arrow::before {
+    border-left-color: var(--fs-host-primary);
+}
+
+.bs-tooltip-right .arrow::before {
+    border-right-color: var(--fs-host-primary);
+}

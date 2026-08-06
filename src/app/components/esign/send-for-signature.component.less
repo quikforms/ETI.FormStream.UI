@@ -1,0 +1,187 @@
+/* ngx-bootstrap mounts this modal on document.body, outside <quik-formstream>, so the host font
+   doesn't reach it and the card must be self-styled here (as the attachments/confirm modals do). */
+.modal-dialog {
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+.modal-dialog.send-for-signature {
+  position: relative;
+  width: 98%;
+  max-width: 1860px;
+  margin: 30px auto;
+  /* This component root is a `.modal-dialog` nested inside ngx-bootstrap's own `.modal-dialog`,
+     so it inherits the generic `.modal-dialog .modal-dialog` padding-top that pushes the card
+     down and leaves the close (top:15px) floating above it, on the overlay. Neutralize it so
+     the close sits inside the card's top-right corner (matching the host). */
+  padding-top: 0;
+}
+
+.modal-dialog .close {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  z-index: 11;
+}
+
+.modal-content {
+  background-color: var(--fs-background);
+  border: none;
+  border-radius: 15px;
+  box-shadow: none;
+}
+
+.modal-header {
+  display: block;
+  text-align: left;
+  border-bottom: none;
+  padding: 40px 30px 0;
+}
+
+.fs-sfs__title {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+// Small muted info icon that reveals a help tooltip; mirrors the reference `color-gray-60` icon.
+.fs-sfs__info-icon {
+  margin-left: 8px;
+  color: var(--fs-gray-60);
+  font-size: 0.8em;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.fs-sfs__section-heading {
+  margin-bottom: 16px;
+}
+
+.fs-sfs__subtitle {
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.fs-sfs__section-desc {
+  margin: 0;
+  color: var(--fs-gray-80);
+}
+
+.modal-body {
+  padding: 20px 30px;
+}
+
+.modal-footer {
+  padding: 10px 30px 30px;
+  border-top: none;
+}
+
+.fs-sfs__empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background-color: ~"oklch(from var(--fs-yellow) l c h / 0.15)";
+  border: 1px solid ~"oklch(from var(--fs-yellow) l c h / 0.5)";
+  color: var(--fs-gray-100);
+
+  i {
+    color: var(--fs-yellow);
+  }
+}
+
+.fs-sfs__empty-actions {
+  margin-top: 16px;
+}
+
+.fs-sfs__config {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.fs-sfs__config-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+}
+
+.fs-input--invalid {
+  border-color: var(--fs-status-red, #d32f2f);
+  box-shadow: 0 0 0 0.2rem rgba(211, 47, 47, 0.25);
+}
+
+.fs-sfs__loading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fs-gray-70);
+  font-size: 13px;
+  padding: 6px 0;
+}
+
+.fs-sfs__field-hint {
+  margin-top: 4px;
+  color: var(--fs-gray-70);
+  font-size: 12px;
+}
+
+.fs-sfs__config-toggle {
+  display: inline-block;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.fs-sfs__signing-order {
+  margin-bottom: 16px;
+}
+
+.fs-sfs__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.fs-sfs__table-actions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin: 12px 0 20px;
+}
+
+.fs-sfs__forms-toggle {
+  i {
+    margin-right: 6px;
+  }
+}
+
+// Outline toggles in this row hover to the host blue (matching the reference) instead of the element's
+// default dark-brand button hover.
+.fs-sfs__table-actions .fs-btn:not(.main-color):hover {
+  background-color: var(--fs-host-primary);
+  color: var(--fs-white);
+  box-shadow: none;
+
+  i {
+    color: var(--fs-white);
+  }
+}
+
+.fs-sfs__messaging {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.fs-sfs__messaging-body {
+  flex: 1 1 100%;
+}
+
+.fs-sfs__message {
+  // The global `.fs-input` forces height:38px; a textarea needs to grow instead.
+  height: auto !important;
+  min-height: 132px;
+  resize: vertical;
+}

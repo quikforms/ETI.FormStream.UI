@@ -1,0 +1,38 @@
+:host { display: block; }
+
+/* R12 — table styling. Horizontal-scroll wrapper keeps wide tables usable. */
+.fs-table-wrap { overflow-x: auto; margin: var(--fs-space-2) 0; }
+
+.fs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-font-body);
+}
+
+.fs-table th,
+.fs-table td {
+  padding: var(--fs-space-2) var(--fs-space-3);
+  text-align: left;
+  vertical-align: top;
+  border: 1px solid var(--fs-color-border);
+}
+
+.fs-table thead th {
+  background: var(--fs-color-surface-alt);
+  color: var(--fs-color-heading);
+  font-size: var(--fs-font-legal);
+  font-weight: var(--fs-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.fs-table tfoot td {
+  background: var(--fs-color-surface-alt);
+  font-weight: var(--fs-weight-medium);
+}
+
+/* Cells reuse fs-field (a child component); the column header already serves as
+   the label. ::ng-deep is required to pierce the child's view encapsulation, kept
+   scoped under .fs-table so it can't leak to other fs-field instances. */
+.fs-table ::ng-deep .fs-field__label { display: none; }

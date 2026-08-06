@@ -1,0 +1,62 @@
+/* Confirm / prompt modal — self-contained styling, analogous to the host's modals.
+   This modal uses `.settings` as the card (there is no `.modal-content` wrapper), so the
+   card surface, spacing and close button are styled here rather than relying on the host's
+   global classes (e.g. the V1 `bg-background`). Scoped selectors are kept specific
+   (`.modal-dialog …`) so they win over the generic global modal rules. */
+
+/* Font set here (component-scoped) rather than on the global `.modal`, so it doesn't bleed
+   onto the host's own ngx-bootstrap modals while the element's styles are injected. */
+.modal-dialog {
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+.modal-dialog .settings {
+  position: relative;
+  width: auto;
+  max-width: 450px;
+  margin: 0 auto;
+  background-color: var(--fs-background);
+  border-radius: 15px;
+  box-shadow: none;
+}
+
+.modal-dialog .close {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  z-index: 11;
+}
+
+/* Left-aligned header (title + description) mirroring the attachments modal, even though the
+   card keeps `.text-center` for the body/footer. `display:block` + the scoped selector override
+   the global Bootstrap `.modal-header` flex/border rules. */
+.modal-dialog .modal-header {
+  display: block;
+  text-align: left;
+  border-bottom: none;
+  padding: 40px 30px 0;
+}
+
+.fs-confirm__title {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.fs-confirm__text {
+  margin-bottom: 0;
+}
+
+.modal-body {
+  padding: 20px 30px 10px;
+}
+
+.modal-footer {
+  padding: 10px 30px 30px;
+}
+
+.fs-confirm__cancel {
+  margin-left: 10px;
+  color: var(--fs-host-primary);
+  cursor: pointer;
+  text-decoration: none;
+}

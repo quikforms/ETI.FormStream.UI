@@ -1,0 +1,43 @@
+{
+  "name": "quik-formstream-ui",
+  "version": "0.0.0",
+  "description": "FormStream UI — an embeddable Angular custom element (<quik-formstream>) for rendering and completing Quik! forms in any host page.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "ng": "ng",
+    "build": "ng build formstream-element --configuration development && node bundle.js",
+    "build-prod": "ng build formstream-element --configuration production && node bundle.js",
+    "build-local": "ng build formstream-element --configuration local && node bundle.js",
+    "watch": "concurrently --names \"ELEMENT,BUNDLE\" --prefix-colors \"green,magenta\" \"ng build formstream-element --configuration local --watch --delete-output-path=false\" \"nodemon --watch dist/formstream/main.js --watch dist/formstream/styles.css --delay 2 --exec \\\"node bundle.js --lenient\\\"\""
+  },
+  "dependencies": {
+    "@angular/animations": "^15.2.10",
+    "@angular/common": "^15.2.10",
+    "@angular/compiler": "^15.2.10",
+    "@angular/core": "^15.2.10",
+    "@angular/elements": "^15.2.10",
+    "@angular/forms": "^15.2.10",
+    "@angular/localize": "^15.2.10",
+    "@angular/platform-browser": "^15.2.10",
+    "@angular/platform-browser-dynamic": "^15.2.10",
+    "@angular/router": "^15.2.10",
+    "@ngrx/effects": "15.4.0",
+    "@ngrx/entity": "15.4.0",
+    "@ngrx/store": "15.4.0",
+    "bootstrap": "^3.3.7",
+    "ngx-bootstrap": "7.0.1",
+    "rxjs": "~6.6.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.11.4"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^15.2.10",
+    "@angular/cli": "^15.2.10",
+    "@angular/compiler-cli": "^15.2.10",
+    "@types/node": "^12.11.1",
+    "concurrently": "^9.2.0",
+    "nodemon": "^3.1.10",
+    "typescript": "~4.8.2"
+  }
+}

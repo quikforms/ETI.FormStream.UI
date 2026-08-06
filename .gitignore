@@ -1,0 +1,26 @@
+# Compiled output — build output is scratch and ignored, EXCEPT the distributable bundle,
+# which is committed at each release so it can be served from the public repo via CDN (jsDelivr).
+/dist/*
+!/dist/formstream/
+/dist/formstream/*
+!/dist/formstream/formstream-bundle.js
+/out-tsc
+
+# Dependencies
+/node_modules
+
+# Angular build cache
+/.angular/cache
+
+# IDEs and editors
+/.vscode
+/.idea
+/.vs
+
+# Logs
+*.log
+npm-debug.log*
+
+# System files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,194 @@
+<div *ngIf="loading$ | async">
+    <div class="loading">
+        <fs-icon name="spinner" [spin]="true" class="fs-icon--5x main-color z"></fs-icon>
+    </div>
+</div>
+
+<notification></notification>
+
+<section class="formstream fs-shell" [fsProportionalScroll]="sidebarTrack">
+
+  <!-- Header -->
+  <div class="container">
+
+    <!-- View Sections floating tab -->
+    <button class="fs-btn view-sections-tab" (click)="toggleSectionsDrawer()" [attr.aria-expanded]="showSections" aria-haspopup="dialog">View Sections</button>
+
+    <!-- Sections popover -->
+    <div *ngIf="showSections" class="popover sections-popover bs-popover-right show" role="dialog" aria-label="Form Sections">
+
+      <div class="popover-body">
+
+        <p class="fs-popover-label">Sections</p>
+
+        <ul class="sections-list">
+          <li *ngFor="let s of selectedForm?.sections; trackBy: trackBySectionId" class="fs-section-link-item">
+            <a class="fs-section-link" (click)="scrollToSection(s.id)">{{ s.title }}</a>
+          </li>
+        </ul>
+
+      </div>
+
+    </div>
+
+    <div class="row fs-shell__header-row">
+
+      <div class="col-md-12 d-flex align-items-end">
+        <img [src]="logoFormstream" height="30">
+        <span class="fs-shell__subtitle">Individual Completion of the Required Information Form</span>
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <!-- Left: Main form card -->
+      <div class="col">
+
+        <div class="card fs-card">
+
+          <div class="card-header">
+
+            <div class="row">
+
+              <div class="col-md-2">
+
+                <img [src]="logoQuikBorder" alt="Logo" class="logo lg" />
+
+              </div>
+
+              <div class="col-md-10">
+
+                <h3 class="fs-form-title">{{ selectedForm?.metadata?.formName }}</h3>
+
+                <span>{{ formIndexLabel }}</span>
+
+                <p class="fs-form-desc" *ngIf="selectedForm?.metadata?.formDescription">{{ selectedForm?.metadata?.formDescription }}</p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="card-body">
+
+            <!-- Dynamic forms rendering (formatted) -->
+            <div class="fs-renderer-wrap">
+
+              <fs-form-renderer [renderedForm]="selectedForm"></fs-form-renderer>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Sidebar -->
+      <div class="col-auto fs-sidebar">
+        <div class="fs-sidebar__track" #sidebarTrack>
+
+        <div class="card fs-card">
+
+          <div class="card-header">
+            <button class="fs-btn ok lg w-100" [disabled]="!canSendForSignature" (click)="sendForSignature()">Send For Signature</button>
+          </div>
+
+          <div class="card-body">
+
+            <div class="form-navigator">
+
+              <button class="chevron-btn" type="button" (click)="navigateToPreviousForm()">
+                <fs-icon name="chevron-up"></fs-icon>
+              </button>
+
+              <span class="form-counter">{{ formIndexLabel }}</span>
+
+              <button class="chevron-btn" type="button" (click)="navigateToNextForm()">
+                <fs-icon name="chevron-down"></fs-icon>
+              </button>
+
+            </div>
+
+            <h5 class="fs-sidebar-title">Forms ({{ renderedForms.length || 0 }})</h5>
+
+            <ul *ngIf="completions$ | async as completions">
+
+             <li *ngFor="let form of renderedForms; let i = index; trackBy: trackByFormId"
+                [class.form-item-active]="i === selectedIndex"
+                class="form-item cursor-pointer"
+                (click)="selectForm(i)"
+                (keydown)="onFormItemKeydown($event, i)"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'Select form ' + form.metadata.formName">
+
+
+                <div class="form-item-content">
+
+                <div class="form-item-header">
+                  <fs-icon name="circle" class="fs-icon--sm" [class.active-dot]="i === selectedIndex"></fs-icon>
+
+                  <span class="form-number" [class.active-number]="i === selectedIndex">{{ i + 1 }}.</span>
+
+                  <h4 class="form-item-name">{{ form.metadata.formName }}</h4>
+
+                  <span class="form-item-id">#{{ form.metadata.formId }}</span>
+                </div>
+
+                  <span class="active-badge" *ngIf="i === selectedIndex">Active</span>
+
+                  <div class="form-item-metrics" *ngIf="completions[i] as completion">
+                    <span class="form-item-percent">{{ completion.percent }}%</span>
+                    <span class="form-item-missing">{{ completion.missing > 0 ? completion.missing + ' missing' : 'Complete' }}</span>
+                  </div>
+
+                </div>
+              </li>
+
+            </ul>
+
+          </div>
+
+        </div>
+
+        <div class="card transparent">
+
+          <div class="card-body">
+
+            <div class="fs-actions__attachments">
+              <div class="fs-attachments">
+                <div class="fs-attachments__header"><span class="cursor-pointer" (click)="showAttachmentsModal()"><fs-icon name="paperclip" class="fs-icon--lg"></fs-icon>
+                  Form Attachments</span></div>
+                <div *ngFor="let attachedFile of attachedFiles" class="fs-attachments__row">
+                  <div class="fs-attachments__meta">
+                    <span class="fs-attachments__name">{{attachedFile.name}}</span>
+                    <span class="fs-attachments__size">{{attachedFile.fileSize}} bytes</span>
+                    <span class="fs-attachments__position">{{attachedFile.addedBeforeForms ? "Before form" : "After form"}}</span>
+                  </div>
+                  <span class="fs-attachments__remove" role="presentation" (click)="removeAttachedFile(attachedFile.id)">✕</span>
+                </div>
+              </div>
+            </div>
+
+            <hr class="simple">
+
+            <div class="fs-action cursor-pointer" (click)="printForms()"><fs-icon name="eye" class="fs-icon--lg"></fs-icon><a class="fs-link">Preview Form</a></div>
+
+            <div class="fs-action fs-action--last"><span class="cursor-pointer" (click)="saveForms()"><fs-icon name="upload" class="fs-icon--lg"></fs-icon><a class="fs-link">Save Progress</a></span></div>
+
+            <div class="fs-shell__footer-logo"><img [src]="logoQuik" alt="Logo" class="logo" /></div>
+
+          </div>
+
+        </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Drawer removed; popover used instead -->
+</section>

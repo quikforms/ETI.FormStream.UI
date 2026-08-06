@@ -1,0 +1,36 @@
+<div class="fs-table-wrap">
+  <table class="fs-table">
+
+    <thead>
+      <tr *ngFor="let row of table.headerRows; trackBy: trackByIndex">
+        <th *ngFor="let c of row; trackBy: trackByIndex"
+            scope="col"
+            [attr.colspan]="c.colspan > 1 ? c.colspan : null"
+            [attr.rowspan]="c.rowspan > 1 ? c.rowspan : null"
+            [style.width.%]="c.relativeWidth ? c.relativeWidth * 100 : null">{{ c.text }}</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let row of table.rows; trackBy: trackByIndex">
+        <td *ngFor="let cell of row.cells; trackBy: trackByIndex">
+          <ng-container *ngTemplateOutlet="cellTpl; context: { $implicit: cell }"></ng-container>
+        </td>
+      </tr>
+    </tbody>
+
+    <tfoot *ngIf="table.footer as footer">
+      <tr>
+        <td *ngFor="let cell of footer.cells; trackBy: trackByIndex">
+          <ng-container *ngTemplateOutlet="cellTpl; context: { $implicit: cell }"></ng-container>
+        </td>
+      </tr>
+    </tfoot>
+
+  </table>
+</div>
+
+<ng-template #cellTpl let-c>
+  <fs-field *ngIf="c.field as f" [field]="f" [control]="control(f.controlKey)"></fs-field>
+  <span *ngIf="c.text">{{ c.text }}</span>
+</ng-template>

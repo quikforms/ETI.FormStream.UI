@@ -1,0 +1,59 @@
+:host { display: block; }
+
+.fs-field { min-width: 0; }
+
+.fs-field__label {
+  display: block;
+  margin-bottom: var(--fs-space-2);
+  font-size: var(--fs-font-label);
+  font-weight: var(--fs-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fs-color-faint);
+}
+
+.fs-field__input {
+  width: 100%;
+  height: var(--fs-input-height);
+  padding: 9px 10px;
+  border: 1px solid var(--fs-color-border);
+  border-radius: var(--fs-radius);
+  background: var(--fs-color-surface);
+  color: var(--fs-color-text);
+  font-size: var(--fs-font-body);
+  font-family: inherit;
+  line-height: 1.2;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+
+.fs-field__input::placeholder { font-style: italic; color: var(--fs-color-faint); }
+
+.fs-field__input:focus {
+  outline: 0;
+  border-color: var(--fs-color-focus);
+  box-shadow: 0 0 0 3px var(--fs-color-focus-ring);
+}
+
+textarea.fs-field__input { height: auto; resize: vertical; }
+
+.fs-field__description {
+  margin: var(--fs-space-1) 0 0;
+  font-size: var(--fs-font-legal);
+  line-height: 1.4;
+  color: var(--fs-color-muted);
+  max-width: 65ch;
+}
+
+/* Shared choice control (checkbox / radio) — also reused by fs-radio-group. */
+.fs-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fs-space-2);
+  cursor: pointer;
+  color: var(--fs-color-text);
+}
+
+.fs-choice input { margin: 0; flex: 0 0 auto; cursor: pointer; }
+/* Choice text is content, not a heading — pin it to the body size so it never
+   out-ranks a (possibly nested, smaller) section title above it. */
+.fs-choice__label { font-size: var(--fs-font-body); line-height: 1.3; }

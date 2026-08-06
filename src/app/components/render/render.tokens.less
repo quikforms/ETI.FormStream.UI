@@ -1,0 +1,107 @@
+/* FormStream design tokens — the single source of truth for the element's visual
+   identity, as runtime CSS custom properties.
+
+   Colors are expressed in OKLch (modern, themeable notation); the values are the
+   existing FormStream identity converted from sRGB — same colors, new notation.
+   Derived shades and alphas use CSS relative-color syntax (`oklch(from … )`), escaped
+   with `~"…"` so LESS emits them verbatim. Targets modern browsers.
+
+   The `--fs-*` names are consumed across the element (render components included), so
+   they are preserved.
+
+   Declared on `:root` so the tokens resolve everywhere the element's global stylesheet
+   paints — including ngx-bootstrap overlays (modal/tooltip/popover) that mount on
+   document.body, outside <quik-formstream>. Custom properties are inert (they restyle
+   nothing unless consumed) and the `--fs-` prefix avoids collisions, so this is not a
+   visual leak into the host. Under Shadow DOM (future) these move to `:host`. */
+:root {
+  /* ---- Base palette (identity, OKLch) ---- */
+  --fs-gray-101: oklch(0.3417 0.0041 196.96);
+  --fs-gray-100: oklch(0.4508 0.0138 196.67);
+  --fs-gray-90: oklch(0.5123 0.0123 196.78);
+  --fs-gray-80: oklch(0.5693 0.0096 196.89);
+  --fs-gray-70: oklch(0.6268 0.0094 196.92);
+  --fs-gray-60: oklch(0.6838 0.0081 196.97);
+  --fs-gray-50: oklch(0.7372 0.0057 197.03);
+  --fs-gray-40: oklch(0.792 0.0045 197.07);
+  --fs-gray-30: oklch(0.846 0.0033 197.09);
+  --fs-gray-20: oklch(0.8983 0.0033 197.1);
+  --fs-gray-10: oklch(0.9484 0.0011 197.14);
+
+  --fs-white: oklch(0.994 0 89.88);
+  --fs-foreground: oklch(0.9702 0 89.88);
+  --fs-background: oklch(0.9491 0 89.88);
+
+  --fs-red: oklch(0.6307 0.194 29.44);
+  --fs-green: oklch(0.6629 0.1602 152.37);
+  --fs-yellow: oklch(0.8643 0.1427 84.36);
+  --fs-crimson: oklch(0.5082 0.1989 23.49);
+  --fs-blue: oklch(0.6519 0.127 243.71);
+
+  /* Brand (primary) — aligned to the non-blue gray identity. */
+  --fs-brand: var(--fs-gray-100);
+  --fs-brand-strong: var(--fs-gray-101);
+
+  /* ---- Semantic colors ---- */
+  --fs-color-text: var(--fs-gray-100);
+  --fs-color-heading: var(--fs-gray-101);
+  --fs-color-muted: var(--fs-gray-70);
+  --fs-color-faint: var(--fs-gray-60);
+  --fs-color-border: var(--fs-gray-30);
+  --fs-color-border-strong: var(--fs-gray-40);
+  --fs-color-surface: var(--fs-white);
+  --fs-color-surface-alt: var(--fs-gray-10);
+  --fs-color-note: var(--fs-crimson);
+  --fs-color-focus: var(--fs-brand);
+  --fs-color-focus-ring: ~"oklch(from var(--fs-brand) l c h / 0.25)";
+
+  /* Field-status accents. Soft tints derive from the base accents; the alpha variants
+     use relative-color (exact), the lightness variants carry computed OKLch values
+     (faithful to the previous LESS lighten()/darken() results). */
+  --fs-status-blue: var(--fs-blue);
+  --fs-status-blue-soft: ~"oklch(from var(--fs-blue) l c h / 0.18)";
+  --fs-status-yellow-soft: oklch(1 0 89.88);
+  --fs-status-red-soft: oklch(0.9717 0.0109 24.32);
+
+  /* Pale-blue guidance washes + darker green (ok-button hover) */
+  --fs-blue-wash: oklch(0.956 0.0152 241.77);
+  --fs-blue-wash-strong: oklch(0.9894 0.0042 236.5);
+  --fs-green-strong: oklch(0.5424 0.1285 152.68);
+
+  /* Active-form accent (orange) — sidebar form-list highlight */
+  --fs-accent: oklch(0.6461 0.1943 41.12);
+  --fs-accent-strong: oklch(0.5534 0.1739 38.4);
+  --fs-accent-border: oklch(0.8366 0.1165 66.29);
+  --fs-accent-soft: oklch(0.9015 0.0729 70.7);
+  --fs-accent-tint: oklch(0.9682 0.0254 78.92);
+  --fs-accent-wash: oklch(0.9895 0.009 78.28);
+
+  /* Host-aligned primary (modal action buttons match the Quik! App host's blue #2a98c8) */
+  --fs-host-primary: oklch(0.6411 0.1185 232.37);
+  --fs-host-primary-strong: oklch(0.5462 0.0994 231.63);
+
+  /* ---- Spacing scale ---- */
+  --fs-space-1: 4px;
+  --fs-space-2: 8px;
+  --fs-space-3: 12px;
+  --fs-space-4: 16px;
+  --fs-space-5: 24px;
+
+  /* ---- Typography role sizes (base 15px, Source Sans Pro) ---- */
+  --fs-font-h1: 17px;
+  --fs-font-h2: 16px;
+  --fs-font-h3: 16px;
+  --fs-font-body: 15px;
+  --fs-font-legal: 13px;
+  --fs-font-footnote: 12px;
+  --fs-weight-semibold: 600;
+  --fs-weight-medium: 500;
+
+  /* ---- Form controls ---- */
+  --fs-font-label: 14px;
+  --fs-input-height: 38px;
+  --fs-radius: 5px;
+
+  /* ---- Section depth indent step ---- */
+  --fs-depth-step: 16px;
+}

@@ -1,0 +1,30 @@
+:host { display: block; }
+
+.fs-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fs-space-2) var(--fs-space-5);
+}
+
+/* When options carry descriptions, stack them vertically for readability. */
+.fs-radio-group--vertical {
+  flex-direction: column;
+  gap: var(--fs-space-3);
+}
+
+.fs-radio-group__option {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--fs-space-2);
+  cursor: pointer;
+}
+.fs-radio-group--vertical .fs-radio-group__option { align-items: flex-start; }
+
+.fs-radio-group__option input { margin: 0; flex: 0 0 auto; }
+.fs-radio-group__label { color: var(--fs-color-text); }
+.fs-radio-group__desc {
+  display: block;
+  margin-top: var(--fs-space-1);
+  font-size: var(--fs-font-legal);
+  color: var(--fs-color-muted);
+}

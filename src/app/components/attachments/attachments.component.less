@@ -1,0 +1,18 @@
+/* ngx-bootstrap mounts this modal on document.body, outside <quik-formstream>, so the host
+   font-family doesn't reach it. Set it here (component-scoped) rather than on the global
+   `.modal`, so it doesn't bleed onto the host's own modals while the styles are injected. */
+.modal-dialog {
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+select.fs-input {
+  cursor: pointer;
+}
+
+.fs-attachments__title {
+  font-weight: 700;
+}
+
+.fs-attachments__field {
+  margin-bottom: 15px;
+}

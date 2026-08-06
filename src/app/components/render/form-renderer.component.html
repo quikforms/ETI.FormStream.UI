@@ -1,0 +1,7 @@
+<div class="fs-renderer" *ngIf="renderedForm">
+  <fs-section
+    *ngFor="let section of renderedForm.sections; trackBy: trackBySectionId"
+    [section]="section"
+    [parentGroup]="renderedForm.formGroup">
+  </fs-section>
+</div>

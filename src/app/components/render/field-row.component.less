@@ -1,0 +1,35 @@
+:host { display: block; }
+
+/* R3 case 2 — multiple checkboxes only: wrap horizontally (Yes/No-style). */
+.fs-field-row--inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--fs-space-2) var(--fs-space-5);
+}
+
+/* R3 case 5 + R4 — multiple inputs: proportional row.
+   flex-basis:0 + flex-grow=relativeWidth (set inline) distributes the row width
+   proportionally after the gap is subtracted (gap compensation, no manual calc). */
+.fs-field-row--proportional {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--fs-space-4);
+}
+.fs-field-row__cell { flex-basis: 0; min-width: 0; }
+
+/* R3 case 3 — checkboxes + inputs: parent-child, inputs indented under the checkboxes. */
+.fs-field-row--grouped {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fs-space-2);
+}
+.fs-field-row__children {
+  margin-top: var(--fs-space-1);
+  margin-left: var(--fs-space-4);
+  padding-left: var(--fs-space-4);
+  border-left: 2px solid var(--fs-color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fs-space-3);
+}

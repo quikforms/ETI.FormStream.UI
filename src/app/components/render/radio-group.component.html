@@ -1,0 +1,10 @@
+<div class="fs-radio-group" [class.fs-radio-group--vertical]="hasDescriptions">
+  <label class="fs-radio-group__option" *ngFor="let opt of group.options; trackBy: trackByExport">
+    <input type="radio"
+      [name]="group.controlKey"
+      [checked]="isSelected(opt.exportValue)"
+      (change)="select(opt.exportValue)" />
+    <span class="fs-radio-group__label">{{ opt.label }}</span>
+    <span *ngIf="opt.description" class="fs-radio-group__desc">{{ opt.description }}</span>
+  </label>
+</div>

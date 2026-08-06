@@ -1,0 +1,56 @@
+:host { display: block; }
+
+.fs-section {
+  min-width: 0;   /* allow shrinking so wide descendants (tables) don't blow out the flex layout */
+  scroll-margin-top: var(--fs-space-4);
+  padding: var(--fs-space-5) var(--fs-space-4) var(--fs-space-4);
+
+  &__header { display: flex; align-items: flex-start; gap: var(--fs-space-2); margin-bottom: var(--fs-space-4); }
+  &__title { margin: 0; font-size: var(--fs-font-h1); font-weight: var(--fs-weight-semibold); color: var(--fs-color-heading); }
+  &__inline-check { margin-top: 3px; flex: 0 0 auto; }
+  &__body { min-width: 0; }
+  &__body > * + * { margin-top: var(--fs-space-4); }   /* vertical rhythm */
+}
+
+/* R7 — section depth (visual; clamped at 3).
+   Each level draws a continuous vertical rail. Because the section list is FLAT
+   (siblings, not nested in the DOM), a section paints a rail for EVERY ancestor
+   level — not just its own — as full-height background lines. Adjacent sections
+   touch vertically, and deeper sections re-draw the shallower rails at the same
+   x, so the rails stay continuous and aligned instead of breaking into segments.
+   Indent uses padding-left (box starts at x=0 so rails land at 16/32/48px). */
+@fs-rail: linear-gradient(var(--fs-color-border), var(--fs-color-border));
+
+.fs-depth-1 {
+  padding: var(--fs-space-2) 0 var(--fs-space-2) calc(var(--fs-depth-step) + 12px);
+  background: @fs-rail var(--fs-depth-step) 0 / 1px 100% no-repeat;
+  .fs-section__title { font-size: var(--fs-font-h2); }
+}
+.fs-depth-2 {
+  padding: var(--fs-space-2) 0 var(--fs-space-2) calc(var(--fs-depth-step) * 2 + 12px);
+  background:
+    @fs-rail var(--fs-depth-step) 0 / 1px 100% no-repeat,
+    @fs-rail calc(var(--fs-depth-step) * 2) 0 / 1px 100% no-repeat;
+  .fs-section__title { font-size: var(--fs-font-h3); }
+}
+.fs-depth-3 {
+  padding: var(--fs-space-2) 0 var(--fs-space-2) calc(var(--fs-depth-step) * 3 + 12px);
+  background:
+    @fs-rail var(--fs-depth-step) 0 / 1px 100% no-repeat,
+    @fs-rail calc(var(--fs-depth-step) * 2) 0 / 1px 100% no-repeat,
+    @fs-rail calc(var(--fs-depth-step) * 3) 0 / 1px 100% no-repeat;
+  /* Deepest level: keep heading colour (muting it would push the title behind the
+     darker field text); use weight + italic to mark it, never below the content tier. */
+  .fs-section__title { font-size: var(--fs-font-h3); font-weight: var(--fs-weight-medium); font-style: italic; }
+}
+
+/* R2 — static text by role */
+.fs-text { margin: 0; font-size: var(--fs-font-body); line-height: 1.5; color: var(--fs-color-text); white-space: pre-wrap; }
+.fs-text--header-1 { font-size: var(--fs-font-h1); font-weight: var(--fs-weight-semibold); color: var(--fs-color-heading); }
+.fs-text--header-2 { font-size: var(--fs-font-h2); font-weight: var(--fs-weight-semibold); color: var(--fs-color-heading); }
+.fs-text--header-3 { font-size: var(--fs-font-h3); font-weight: var(--fs-weight-medium); color: var(--fs-color-heading); }
+.fs-text--body { color: var(--fs-color-text); }
+.fs-text--emphasis { font-weight: var(--fs-weight-medium); font-style: italic; }
+.fs-text--legal { font-size: var(--fs-font-legal); color: var(--fs-color-faint); }
+.fs-text--footnote { font-size: var(--fs-font-footnote); color: var(--fs-color-faint); }
+.fs-text--note { font-size: var(--fs-font-legal); font-style: italic; color: var(--fs-color-note); }

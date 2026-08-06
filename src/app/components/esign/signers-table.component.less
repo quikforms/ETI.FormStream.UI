@@ -1,0 +1,152 @@
+.fs-signers {
+  // Let a wide table scroll horizontally within the modal rather than overflow it.
+  overflow-x: auto;
+}
+
+.fs-signers__loading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fs-gray-70);
+  font-size: 13px;
+}
+
+.fs-signers__table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--fs-color-border);
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--fs-gray-70);
+    background-color: var(--fs-color-surface-alt);
+    border-bottom-width: 2px;
+  }
+
+  .fs-input {
+    width: 100%;
+    min-width: 160px;
+  }
+
+  .fs-input--invalid {
+    border-color: var(--fs-status-red, #d32f2f);
+    box-shadow: 0 0 0 0.2rem rgba(211, 47, 47, 0.25);
+  }
+}
+
+// Small muted info icon in the column headers that reveals a help tooltip (mirrors the reference).
+.fs-signers__info-icon {
+  margin-left: 6px;
+  color: var(--fs-gray-60);
+  font-size: 0.85em;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.fs-signers__roles {
+  color: var(--fs-gray-80);
+  white-space: normal;
+}
+
+.fs-signers__forms-included {
+  white-space: nowrap;
+}
+
+.fs-signers__forms-count {
+  cursor: default;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.fs-signers__forms-empty {
+  color: var(--fs-gray-60);
+}
+
+.fs-signers__none {
+  margin: 0;
+  padding: 16px 4px;
+  color: var(--fs-gray-70);
+}
+
+.fs-signers__duplicate-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--fs-gray-70);
+
+  i {
+    margin-right: 4px;
+  }
+}
+
+.fs-signers__order-col {
+  width: 1%;
+  white-space: nowrap;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.fs-signers__order {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fs-signers__order-arrows {
+  display: flex;
+  flex-direction: column;
+}
+
+.fs-signers__arrow {
+  border: none;
+  background: none;
+  padding: 0 4px;
+  line-height: 1;
+  color: var(--fs-gray-70);
+  cursor: pointer;
+
+  &:disabled {
+    color: var(--fs-gray-30);
+    cursor: not-allowed;
+  }
+}
+
+.fs-signers__order-input {
+  // Beats the `.fs-signers__table .fs-input` rule (width:100%; min-width:160px) so the ORDER input stays
+  // compact — room for 2–3 digits — instead of stretching the column.
+  width: 40px !important;
+  min-width: 40px !important;
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.fs-signers__actions-col {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.fs-signers__remove {
+  border: none;
+  background: none;
+  padding: 4px 6px;
+  line-height: 1;
+  font-size: 16px;
+  color: var(--fs-status-red, #d32f2f);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--fs-status-red-strong, #a71d2a);
+  }
+}

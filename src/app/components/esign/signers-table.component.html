@@ -1,0 +1,116 @@
+<div class="fs-signers">
+  <p class="fs-signers__none" *ngIf="signers.length === 0">
+    No recipients to display. Add a recipient or show unassigned roles to get started.
+  </p>
+  <table class="fs-signers__table" *ngIf="signers.length > 0">
+    <thead>
+      <tr>
+        <th *ngIf="useSigningOrder" class="fs-signers__order-col">ORDER
+          <fs-icon name="circle-info" class="fs-signers__info-icon"
+            [tooltip]="tooltips.order" placement="bottom"></fs-icon>
+        </th>
+        <th>SIGNERS</th>
+        <th>EMAIL</th>
+        <th *ngIf="!useGlobalConfiguration">SEND TYPE
+          <fs-icon name="circle-info" class="fs-signers__info-icon"
+            [tooltip]="tooltips.sendType" placement="bottom"></fs-icon>
+        </th>
+        <th *ngIf="!useGlobalConfiguration">ID CHECK
+          <fs-icon name="circle-info" class="fs-signers__info-icon"
+            [tooltip]="tooltips.idCheck" placement="bottom"></fs-icon>
+        </th>
+        <th *ngIf="!useGlobalConfiguration">SIGNING GROUP
+          <fs-icon name="circle-info" class="fs-signers__info-icon"
+            [tooltip]="tooltips.signingGroup" placement="bottom"></fs-icon>
+        </th>
+        <th *ngIf="showPhoneColumn">PHONE
+          <fs-icon name="circle-info" class="fs-signers__info-icon"
+            [tooltip]="tooltips.phone" placement="bottom"></fs-icon>
+        </th>
+        <th *ngIf="showFormsIncludedColumn">FORMS INCLUDED</th>
+        <th>ROLES</th>
+        <th *ngIf="hasRemovableRows" class="fs-signers__actions-col"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let signer of signers; let i = index; trackBy: trackBySigner">
+        <td *ngIf="useSigningOrder" class="fs-signers__order-col">
+          <div class="fs-signers__order">
+            <div class="fs-signers__order-arrows">
+              <button type="button" class="fs-signers__arrow" [disabled]="i === 0"
+                (click)="moveUp.emit(signer)" title="Move up">
+                <fs-icon name="chevron-up"></fs-icon>
+              </button>
+              <button type="button" class="fs-signers__arrow" [disabled]="i === signers.length - 1"
+                (click)="moveDown.emit(signer)" title="Move down">
+                <fs-icon name="chevron-down"></fs-icon>
+              </button>
+            </div>
+            <input type="number" min="1" class="fs-input fs-signers__order-input" [ngModel]="signer.order"
+              [class.fs-input--invalid]="fieldValidator(signer, 'order')"
+              (ngModelChange)="orderChange.emit({ signer: signer, value: $event })">
+          </div>
+        </td>
+        <td>
+          <input type="text" class="fs-input" [ngModel]="signer.name" placeholder="Signer name"
+            [disabled]="nameEmailDisabled(signer)"
+            [class.fs-input--invalid]="fieldValidator(signer, 'name')"
+            (ngModelChange)="nameChange.emit({ signer: signer, value: $event })">
+          <small class="fs-signers__duplicate-hint" *ngIf="useSigningOrder && duplicateSigner(signer)">
+            <fs-icon name="users"></fs-icon> Same order as duplicate
+          </small>
+        </td>
+        <td>
+          <input type="email" class="fs-input" [ngModel]="signer.mail" placeholder="Email"
+            [disabled]="nameEmailDisabled(signer)"
+            [class.fs-input--invalid]="fieldValidator(signer, 'email')"
+            (ngModelChange)="emailChange.emit({ signer: signer, value: $event })">
+        </td>
+        <td *ngIf="!useGlobalConfiguration">
+          <select class="fs-input" [ngModel]="signer.sendType"
+            [class.fs-input--invalid]="fieldValidator(signer, 'sendType')"
+            (ngModelChange)="sendTypeChange.emit({ signer: signer, value: $event })">
+            <option *ngFor="let option of sendTypeOptions" [value]="option.keyName">{{ option.name }}</option>
+          </select>
+        </td>
+        <td *ngIf="!useGlobalConfiguration">
+          <select class="fs-input" [ngModel]="signer.idCheck"
+            (ngModelChange)="idCheckChange.emit({ signer: signer, value: $event })">
+            <option *ngFor="let option of idCheckOptions" [value]="option.keyName.toString()">{{ option.name }}</option>
+          </select>
+        </td>
+        <td *ngIf="!useGlobalConfiguration">
+          <div *ngIf="signingGroupsLoading" class="fs-signers__loading">
+            <fs-icon name="spinner" [spin]="true"></fs-icon> Loading signing groups...
+          </div>
+          <select *ngIf="!signingGroupsLoading" class="fs-input" [ngModel]="signer.signingGroup || ''"
+            [disabled]="signingGroupDisabled(signer) || !hasSigningGroups"
+            (ngModelChange)="signingGroupChange.emit({ signer: signer, value: $event })">
+            <option *ngFor="let option of signingGroupOptions" [value]="option.keyName">{{ option.name }}</option>
+          </select>
+        </td>
+        <td *ngIf="showPhoneColumn">
+          <input type="text" class="fs-input" *ngIf="isPhoneCheck(signer.idCheck)" [ngModel]="signer.phone"
+            [class.fs-input--invalid]="fieldValidator(signer, 'phone')"
+            (ngModelChange)="phoneChange.emit({ signer: signer, value: $event })">
+        </td>
+        <td *ngIf="showFormsIncludedColumn" class="fs-signers__forms-included">
+          <ng-container *ngIf="formsIncluded(signer) as forms">
+            <span *ngIf="forms.length > 0; else noForms" class="fs-signers__forms-count"
+              [tooltip]="formsIncludedTooltip(forms)" placement="top" containerClass="fs-tooltip-multiline">
+              {{ forms.length }} form{{ forms.length === 1 ? '' : 's' }}
+            </span>
+            <ng-template #noForms><span class="fs-signers__forms-empty">-</span></ng-template>
+          </ng-container>
+        </td>
+        <td class="fs-signers__roles">{{ formattedRoles(signer) }}</td>
+        <td *ngIf="hasRemovableRows" class="fs-signers__actions-col">
+          <button type="button" class="fs-signers__remove" *ngIf="signer.isManuallyAdded"
+            (click)="removeRecipient.emit(signer)" title="Remove recipient">
+            <fs-icon name="xmark"></fs-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

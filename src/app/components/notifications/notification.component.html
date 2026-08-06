@@ -1,0 +1,14 @@
+<div @transition *ngFor="let notification of notifications | async">
+    <div
+        *ngIf="notification && notification.display"
+        class="d-flex align-items-center justify-content-between notification pos-{{notification.cssPos}} type-{{notification.cssType}} alert-dismissible fade in"
+        [class.home]='isHomeActivated'
+        role="alert">
+
+
+        <span><strong>{{notification.displayHeadText}}</strong> {{notification.text}}</span>
+
+        <fs-icon name="xmark" class="pointer ml-5" (click)="onNotificationClose(notification.id)" aria-label="Close" aria-hidden="true"></fs-icon>
+
+    </div>
+</div>

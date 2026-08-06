@@ -1,0 +1,155 @@
+<div class="modal-dialog send-for-signature">
+  <div class="close">
+    <fs-icon name="xmark" class="pointer" (click)="close()" aria-label="Close" aria-hidden="true"></fs-icon>
+  </div>
+
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2 class="fs-sfs__title">Send for Signature
+        <fs-icon name="circle-info" class="fs-sfs__info-icon"
+          [tooltip]="tooltips.duplicateRoles" placement="bottom"></fs-icon>
+      </h2>
+      <p><strong>Enter the details of each person who needs to sign your documents.</strong>
+        Each row represents a signer. Fill in their name, email, signing method, and identity check
+        preferences. Roles and form assignments are pre-filled based on your package selection.</p>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="isEmpty" class="fs-sfs__empty">
+        <fs-icon name="triangle-exclamation" aria-hidden="true"></fs-icon>
+        No signers data available. Please review a form package first or add recipients manually.
+      </div>
+      <div *ngIf="isEmpty" class="fs-sfs__empty-actions">
+        <button type="button" class="fs-btn main-color" (click)="onAddRecipient()">Add Recipient</button>
+      </div>
+
+      <ng-container *ngIf="!isEmpty">
+        <div class="fs-sfs__section-heading">
+          <h3 class="fs-sfs__subtitle">Required Configuration</h3>
+          <p class="fs-sfs__section-desc">Set the Send Type and ID Check for all your signers below. If
+            available, you can also configure a Signing Group. You can also optionally set a signing order.</p>
+        </div>
+
+        <!-- Configuration: applied to every signer in global mode, or per row otherwise. -->
+        <div class="fs-sfs__config">
+          <div class="fs-sfs__config-field">
+            <label class="fs-label">Send Type
+              <fs-icon name="circle-info" class="fs-sfs__info-icon"
+                [tooltip]="tooltips.sendType" placement="bottom"></fs-icon>
+            </label>
+            <select class="fs-input" [ngModel]="controller.globalSendType"
+              [class.fs-input--invalid]="controller.isGlobalSendTypeInvalid()"
+              [disabled]="!controller.useGlobalConfiguration"
+              (ngModelChange)="onGlobalSendTypeChange($event)">
+              <option *ngFor="let option of sendTypeOptions" [value]="option.keyName">{{ option.name }}</option>
+            </select>
+          </div>
+          <div class="fs-sfs__config-field">
+            <label class="fs-label">ID Check
+              <fs-icon name="circle-info" class="fs-sfs__info-icon"
+                [tooltip]="tooltips.idCheck" placement="bottom"></fs-icon>
+            </label>
+            <select class="fs-input" [ngModel]="controller.globalIdCheck"
+              [disabled]="!controller.useGlobalConfiguration"
+              (ngModelChange)="onGlobalIdCheckChange($event)">
+              <option *ngFor="let option of idCheckOptions" [value]="option.keyName.toString()">{{ option.name }}</option>
+            </select>
+          </div>
+          <div class="fs-sfs__config-field">
+            <label class="fs-label">Signing Group
+              <fs-icon name="circle-info" class="fs-sfs__info-icon"
+                [tooltip]="tooltips.signingGroup" placement="bottom"></fs-icon>
+            </label>
+            <div *ngIf="signingGroupsLoading$ | async" class="fs-sfs__loading">
+              <fs-icon name="spinner" [spin]="true"></fs-icon> Loading signing groups...
+            </div>
+            <select *ngIf="!(signingGroupsLoading$ | async)" class="fs-input"
+              [ngModel]="controller.globalSigningGroup"
+              [disabled]="!controller.useGlobalConfiguration || !(hasSigningGroups$ | async)"
+              (ngModelChange)="onGlobalSigningGroupChange($event)">
+              <option *ngFor="let option of (signingGroupOptions$ | async)" [value]="option.keyName">{{ option.name }}</option>
+            </select>
+            <small class="fs-sfs__field-hint" *ngIf="hasSigningGroups$ | async">
+              Applies to all signers; replaces named recipients.
+            </small>
+          </div>
+        </div>
+
+        <a class="fs-link fs-sfs__config-toggle" (click)="toggleGlobalConfiguration()">
+          {{ controller.useGlobalConfiguration ? 'Configure per signer instead' : 'Configure globally instead' }}
+        </a>
+
+        <div class="fs-sfs__signing-order">
+          <label class="fs-sfs__checkbox">
+            <input type="checkbox" [checked]="controller.useSigningOrder" (change)="toggleSigningOrder()">
+            <span>Set signing order</span>
+          </label>
+        </div>
+
+        <fs-signers-table
+          [signers]="controller.visibleSigners"
+          [useGlobalConfiguration]="controller.useGlobalConfiguration"
+          [useSigningOrder]="controller.useSigningOrder"
+          [fieldValidator]="isFieldInvalid"
+          [duplicateSigner]="isDuplicate"
+          [signingGroupOptions]="(signingGroupOptions$ | async) || []"
+          [signingGroupsLoading]="(signingGroupsLoading$ | async) || false"
+          [hasSigningGroups]="(hasSigningGroups$ | async) || false"
+          [signingGroupDisabled]="isSigningGroupDisabled"
+          [nameEmailDisabled]="isNameEmailDisabled"
+          [showFormsIncludedColumn]="showFormsIncluded"
+          [formsIncluded]="formNamesFor"
+          (nameChange)="onNameChange($event)"
+          (emailChange)="onEmailChange($event)"
+          (sendTypeChange)="onSendTypeChange($event)"
+          (idCheckChange)="onIdCheckChange($event)"
+          (phoneChange)="onPhoneChange($event)"
+          (orderChange)="onOrderChange($event)"
+          (signingGroupChange)="onSigningGroupChange($event)"
+          (moveUp)="onMoveUp($event)"
+          (moveDown)="onMoveDown($event)"
+          (removeRecipient)="onRemoveRecipient($event)">
+        </fs-signers-table>
+
+        <div class="fs-sfs__table-actions">
+          <button type="button" class="fs-btn main-color" (click)="onAddRecipient()">
+            Add Recipient
+          </button>
+          <button type="button" class="fs-btn" *ngIf="controller.unassignedRolesCount > 0"
+            (click)="toggleUnassignedRoles()">
+            {{ controller.showUnassignedRoles ? 'Hide' : 'Show' }}
+            {{ controller.unassignedRolesCount }}
+            unassigned role{{ controller.unassignedRolesCount === 1 ? '' : 's' }}
+          </button>
+          <button type="button" class="fs-btn fs-sfs__forms-toggle" (click)="toggleFormsIncluded()">
+            <fs-icon name="file" aria-hidden="true"></fs-icon>
+            {{ showFormsIncluded ? 'Hide' : 'Show' }} Forms Included
+          </button>
+        </div>
+
+        <div class="fs-sfs__section-heading">
+          <h3 class="fs-sfs__subtitle">Messaging</h3>
+          <p class="fs-sfs__section-desc">Enter an email subject and message for all form package recipients.</p>
+        </div>
+        <div class="fs-sfs__messaging">
+          <div class="fs-sfs__config-field">
+            <label class="fs-label">Subject</label>
+            <input type="text" class="fs-input" [(ngModel)]="controller.messageSubject">
+          </div>
+          <div class="fs-sfs__config-field fs-sfs__messaging-body">
+            <label class="fs-label">Message</label>
+            <textarea class="fs-input fs-sfs__message" rows="6" [(ngModel)]="controller.messageBody"></textarea>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="modal-footer">
+      <button class="fs-btn ok" [disabled]="isEmpty || sending" (click)="signNow()">
+        {{ sending ? 'Sending...' : 'Sign Now' }}
+      </button>
+    </div>
+
+  </div>
+</div>

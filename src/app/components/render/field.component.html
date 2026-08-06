@@ -1,0 +1,29 @@
+<!-- TEXT FIELD -->
+<div *ngIf="!field.isChoice" class="fs-field">
+  <label class="fs-field__label">{{ field.displayLabel }}</label>
+
+  <textarea *ngIf="field.isMultiline; else singleLine"
+    class="fs-field__input"
+    [formControl]="control"
+    [attr.placeholder]="placeholder"
+    [style.minHeight.px]="(field.relativeHeight || 1) * rowHeight"></textarea>
+
+  <ng-template #singleLine>
+    <input class="fs-field__input" type="text"
+      [formControl]="control"
+      [fsFormatMask]="field.formatMask || ''"
+      [attr.placeholder]="placeholder" />
+  </ng-template>
+
+  <p *ngIf="field.description" class="fs-field__description">{{ field.description }}</p>
+</div>
+
+<!-- CHECKBOX / RADIO (single-select) -->
+<div *ngIf="field.isChoice" class="fs-field fs-field--choice">
+  <label class="fs-choice">
+    <input [type]="field.fieldType === 'radio' ? 'radio' : 'checkbox'"
+      [checked]="checked" (change)="toggle()" />
+    <span class="fs-choice__label" *ngIf="field.displayLabel">{{ field.displayLabel }}</span>
+  </label>
+  <p *ngIf="field.description" class="fs-field__description">{{ field.description }}</p>
+</div>

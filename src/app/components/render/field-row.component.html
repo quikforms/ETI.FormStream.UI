@@ -1,0 +1,29 @@
+<ng-container [ngSwitch]="layout">
+
+  <!-- CASE 1: single checkbox/radio -->
+  <fs-field *ngSwitchCase="'single-checkbox'" [field]="fields[0]" [control]="control(fields[0])"></fs-field>
+
+  <!-- CASE 2: multiple checkboxes only -->
+  <div *ngSwitchCase="'checkboxes'" class="fs-field-row fs-field-row--inline">
+    <fs-field *ngFor="let f of checkboxFields; trackBy: trackByControlKey" [field]="f" [control]="control(f)"></fs-field>
+  </div>
+
+  <!-- CASE 3: checkboxes + inputs (parent-child) -->
+  <div *ngSwitchCase="'checkboxes-and-inputs'" class="fs-field-row--grouped">
+    <fs-field *ngFor="let f of checkboxFields; trackBy: trackByControlKey" [field]="f" [control]="control(f)"></fs-field>
+    <div class="fs-field-row__children">
+      <fs-field *ngFor="let f of inputFields; trackBy: trackByControlKey" [field]="f" [control]="control(f)"></fs-field>
+    </div>
+  </div>
+
+  <!-- CASE 4: single input -->
+  <fs-field *ngSwitchCase="'single-input'" [field]="fields[0]" [control]="control(fields[0])"></fs-field>
+
+  <!-- CASE 5: multiple inputs (proportional widths) -->
+  <div *ngSwitchDefault class="fs-field-row fs-field-row--proportional">
+    <div *ngFor="let f of inputFields; trackBy: trackByControlKey" class="fs-field-row__cell" [style.flexGrow]="f.relativeWidth || 1">
+      <fs-field [field]="f" [control]="control(f)"></fs-field>
+    </div>
+  </div>
+
+</ng-container>

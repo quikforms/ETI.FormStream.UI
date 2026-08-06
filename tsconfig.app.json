@@ -1,0 +1,14 @@
+/*
+ * Build configuration for the FormStream element application.
+ * Inherits shared settings from the workspace base (./tsconfig.json).
+ */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app",
+    "types": ["node"]
+  },
+  "files": ["src/main.ts", "src/polyfills.ts"],
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.spec.ts"]
+}

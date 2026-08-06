@@ -1,0 +1,28 @@
+<div class="modal-dialog">
+	<div class="settings text-center bg-background">
+		<div class="close">
+			<fs-icon name="xmark" class="pointer" (click)="close()" aria-label="Close" aria-hidden="true"></fs-icon>
+		</div>
+		<div class="modal-header">
+			<h2 class="fs-confirm__title" *ngIf="title">{{ title }}</h2>
+			<p class="fs-confirm__text">{{message || 'Are you sure?'}}</p>
+		</div>
+		<div class="modal-body">
+			<input *ngIf="showInput"
+				type="text"
+				class="fs-input" 
+				[(ngModel)]="inputValue" 
+				[placeholder]="inputPlaceholder"
+				[disabled]="inputReadonly"
+				(keyup.enter)="confirm()">
+		</div>
+		<div class="modal-footer">
+			<button id="ConfirmModalOkBtn" *ngIf="showOkButton" type="button" [ngClass]="okButtonClass"
+        		[disabled]="!isInputValid"
+        		(click)="confirm()">{{okButtonText}}</button>
+
+			<a id="ConfirmModalCancelBtn" *ngIf="showCancelButton" class="fs-confirm__cancel"
+				(click)="cancel()">{{cancelButtonText}}</a>
+		</div>
+	</div>
+</div>

@@ -3,12 +3,17 @@
   "version": "0.0.0",
   "description": "FormStream UI — an embeddable Angular custom element (<quik-formstream>) for rendering and completing Quik! forms in any host page.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quikforms/ETI.FormStream.UI.git"
+  },
   "private": true,
   "scripts": {
     "ng": "ng",
     "build": "ng build formstream-element --configuration development && node bundle.js",
     "build-prod": "ng build formstream-element --configuration production && node bundle.js",
     "build-local": "ng build formstream-element --configuration local && node bundle.js",
+    "version": "npm run build-prod && git add dist/formstream/formstream-bundle.js",
     "watch": "concurrently --names \"ELEMENT,BUNDLE\" --prefix-colors \"green,magenta\" \"ng build formstream-element --configuration local --watch --delete-output-path=false\" \"nodemon --watch dist/formstream/main.js --watch dist/formstream/styles.css --delay 2 --exec \\\"node bundle.js --lenient\\\"\""
   },
   "dependencies": {

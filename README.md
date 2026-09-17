@@ -63,4 +63,5 @@ Angular module by first-party Angular hosts (avoiding a second Angular/Zone runt
 - **Style isolation via Shadow DOM** — fully encapsulate the element's styles so it never touches
   the host page's CSS.
 - **Dual consumption** — expose an Angular library entry point alongside the standalone element.
-- **Distribution** — publish the bundle to a versioned public URL and to npm.
+- **npm distribution** — publish the package to npm. Distribution over versioned public CDN URLs is
+  already in place; see [RELEASING.md](RELEASING.md).

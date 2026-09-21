@@ -6,19 +6,20 @@ export class Configuration {
 
     static fromResponse(configurationRAW: any): Configuration {
         return new this(
-            ApiConfiguration.fromResponse(configurationRAW.api)            
+            ApiConfiguration.fromResponse(configurationRAW.api)
         );
     }
 
 };
 
-export class ApiConfiguration {    
+export class ApiConfiguration {
 
     constructor(
         public qfe: string,
         public auth: string,
         public idp: string,
-        public esign: string
+        public esign: string,
+        public idpClientId: string = ''
     ) {}
 
     static fromResponse(apiConfigurationRAW: any): ApiConfiguration {
@@ -26,7 +27,8 @@ export class ApiConfiguration {
             apiConfigurationRAW.qfe,
             apiConfigurationRAW.auth,
             apiConfigurationRAW.idp,
-            apiConfigurationRAW.esign
+            apiConfigurationRAW.esign,
+            apiConfigurationRAW.idpClientId
         );
     }
 
@@ -36,6 +38,7 @@ export class Endpoints {
 
     public qfe: any;
     public idp: any;
+    public idpClientId: string;
     public esign: any;
 
     constructor (configuration: Configuration) {
@@ -57,6 +60,18 @@ export class Endpoints {
         // from the contract would silently fall such a host back to the baked production URLs.
 
         this.idp = configuration.api.idp;
+
+        // Coerced before trimming. This is the only value a host supplies that is not concatenated
+        // into a URL, so it is the only one that can reach a string method as something that is not a
+        // string — and this runs inside a reducer, where a throw leaves the store refusing everything
+        // that comes after it, silently.
+        //
+        // Trimmed because a padded value passes every check here and then matches no client at the
+        // issuer: measured, `  formstreamclient  ` is refused exactly as an unknown client is. Empty is
+        // the normal state and means the host named none, in which case the renewal leaves the field
+        // out rather than sending it blank — also measured, blank and absent are refused alike, so
+        // there is nothing to be gained by sending one.
+        this.idpClientId = String(configuration.api.idpClientId || '').trim();
 
         this.esign = {
             signingGroups: configuration.api.esign + 'formstream/docusign/signing-groups',

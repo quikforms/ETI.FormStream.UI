@@ -6,12 +6,20 @@
  * repository; per-environment endpoints for internal (non-production) use are supplied by the
  * first-party host at consumption time via the element's `apiConfig` input (see
  * FormStreamComponent) and are never committed here.
+ *
+ * `idpClientId` is the one entry that is not a URL, and it is deliberately empty here. It names the
+ * OAuth client a session's token was issued to, which the token endpoint reads when the access token
+ * is renewed: a renewal presented by a client other than the issuing one is refused. Which client that
+ * is depends on how the environment issues the token, so it is host-supplied like the base URLs rather
+ * than baked in. Left empty, the renewal names no client, which is what an environment whose issuer
+ * fills one in expects.
  */
 export const API_CONFIG = {
   auth: 'https://auth.quikformsapp.com/',
   qfe: 'https://websvcs.quikforms.com/rest/quikformsengine/',
   idp: 'https://websvcs.quikforms.com/rest_authentication/token',
-  esign: 'https://websvcs.quikforms.com/rest/esignature/'
+  esign: 'https://websvcs.quikforms.com/rest/esignature/',
+  idpClientId: ''
 };
 
 /**

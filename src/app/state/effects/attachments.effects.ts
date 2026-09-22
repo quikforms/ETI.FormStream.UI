@@ -107,7 +107,14 @@ export class AttachmentsEffects {
             withLatestFrom(this._store.select(ConfigurationSelectors.selectFeature_Endpoints)),
             switchMap(([action, endpoints]) => {
                 
-                const getAttachmentsUrl = `${endpoints.qfe.getAttachmentsUrl}?unid=${action.unid}`;
+                // Encoded, unlike the calls that carry the identifier in a body or a path: this is the
+                // only one that puts it in a query string, and interpolating it raw leaves the server
+                // reading a different value than the others deliver.
+                //
+                // Nothing dispatches TRY_LOAD_ATTACHMENTS today — the list is seeded from the intake
+                // payload by the effect above — so this path does not run. Said out loud so the next
+                // reader does not take its behaviour as exercised.
+                const getAttachmentsUrl = `${endpoints.qfe.getAttachmentsUrl}?unid=${encodeURIComponent(action.unid)}`;
 
                 return this._http.get(getAttachmentsUrl)
                     .pipe(

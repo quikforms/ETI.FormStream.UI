@@ -9,9 +9,13 @@ export const NOTIFICATION_ERROR_TYPE = "ERROR";
 export const NOTIFICATION_API_ERROR_TYPE = "API_ERROR";
 
 export const NotificationAdapter = createEntityAdapter<Notification>();
-export interface NotificationState extends EntityState<Notification> {}
+/**
+ * `nextId` is part of the state, not a module counter: a reducer has to be a pure function of what it
+ * is given, or the same action replayed produces a different store.
+ */
+export interface NotificationState extends EntityState<Notification> { nextId: number; }
 
-export const initialNotificationState: NotificationState = NotificationAdapter.getInitialState({});
+export const initialNotificationState: NotificationState = NotificationAdapter.getInitialState({ nextId: 1 });
 
 export const selectNotificationFeature = createFeatureSelector<NotificationState>('notificationReducer');
 
@@ -26,15 +30,26 @@ export const errorText = 'Error';
 export const errorTime = 20000;
 export const successTime = 5000;
 
+/**
+ * The state a notification is added to, with the next id already taken.
+ *
+ * Ids have to be distinct, not merely time-ordered: `addOne` ignores an id the collection already
+ * holds, so two notifications raised close together used to leave one of them unshown with nothing
+ * anywhere to say so. Nothing orders on the value — the adapter is created without a sort comparer, so
+ * the collection is already in insertion order — which is why a plain counter is enough.
+ */
+function taking(state: NotificationState): NotificationState {
+    return { ...state, nextId: state.nextId + 1 };
+}
+
 export function NotificationReducer (
     state: NotificationState = initialNotificationState,
     action: NotificationActions
     ) {
-        let newId = new Date().getTime();
         switch (action.type) {
             case SET_SUCCESS_NOTIFICATION:
                 return NotificationAdapter.addOne({
-                    id: newId,
+                    id: state.nextId,
                     cssType: 'success',
                     cssPos: 'bottom',
                     displayHeadText: 'Success',
@@ -43,7 +58,7 @@ export function NotificationReducer (
                     timer: successTime,
                     hideAfterTimer: action.hideAfterTimer,
                     type: NOTIFICATION_SUCCESS_TYPE
-                }, state);
+                }, taking(state));
             case HIDE_NOTIFICATION:
                 return NotificationAdapter.updateOne({
                     id: action.id,
@@ -53,7 +68,7 @@ export function NotificationReducer (
                 }, state);
             case SET_ERROR_NOTIFICATION:
                 return NotificationAdapter.addOne({
-                    id: newId,
+                    id: state.nextId,
                     cssType: errorClassType,
                     cssPos: errorClassPos,
                     displayHeadText: errorText,
@@ -62,7 +77,7 @@ export function NotificationReducer (
                     timer: errorTime,
                     hideAfterTimer: true,
                     type: NOTIFICATION_ERROR_TYPE,
-                }, state);
+                }, taking(state));
             case SET_API_ERROR_NOTIFICATION:
                 let entities = state.entities;
                 let apiErrorNotificationAlreadyAdded = false;
@@ -89,7 +104,7 @@ export function NotificationReducer (
                     }, state);
                 }
                 else {
-                    return NotificationAdapter.addOne(mapNotification(newId, action.apiError, action.title, action.cssType, action.cssPos, action.doNotHideAfterTimer, NOTIFICATION_API_ERROR_TYPE), state);
+                    return NotificationAdapter.addOne(mapNotification(state.nextId, action.apiError, action.title, action.cssType, action.cssPos, action.doNotHideAfterTimer, NOTIFICATION_API_ERROR_TYPE), taking(state));
                 }
             default:
                 return state;

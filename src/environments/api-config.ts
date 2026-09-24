@@ -7,19 +7,18 @@
  * first-party host at consumption time via the element's `apiConfig` input (see
  * FormStreamComponent) and are never committed here.
  *
- * `idpClientId` is the one entry that is not a URL, and it is deliberately empty here. It names the
- * OAuth client a session's token was issued to, which the token endpoint reads when the access token
- * is renewed: a renewal presented by a client other than the issuing one is refused. Which client that
- * is depends on how the environment issues the token, so it is host-supplied like the base URLs rather
- * than baked in. Left empty, the renewal names no client, which is what an environment whose issuer
- * fills one in expects.
+ * `idpClientId` is the one entry that is not a URL. It names the OAuth client a session's token was
+ * issued to, which the token endpoint reads when the access token is renewed: a renewal that does not
+ * present the issuing client is refused. Production issues these tokens to `formstreamclient`, so the
+ * distributed bundle carries that name and an embedding host supplies nothing. A first-party host
+ * pointing the element at another environment overrides it through `apiConfig`, like the base URLs.
  */
 export const API_CONFIG = {
   auth: 'https://auth.quikformsapp.com/',
   qfe: 'https://websvcs.quikforms.com/rest/quikformsengine/',
   idp: 'https://websvcs.quikforms.com/rest_authentication/token',
   esign: 'https://websvcs.quikforms.com/rest/esignature/',
-  idpClientId: ''
+  idpClientId: 'formstreamclient'
 };
 
 /**

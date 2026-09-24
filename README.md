@@ -38,17 +38,21 @@ single self-contained `formstream-bundle.js` under `dist/formstream/`.
 
 ## Configuration
 
-Runtime configuration (API endpoints) is loaded at startup from `config/config.json`. Per-environment
-variants live under `src/config/<env>/config.json` and are selected at deploy time.
+The API endpoints are baked into the build. `src/environments/api-config.ts` holds Quik's production
+endpoints — the ones the distributed bundle carries — and the `environment*.ts` files beside it select
+them per build configuration. The element therefore performs no runtime configuration fetch and needs
+no host wiring: a page that loads the bundle is already pointed at production.
+
+A first-party host embedding the element in a non-production environment overrides the base URLs, and
+the OAuth client name, at runtime through the element's `apiConfig` input; any key left unset falls
+back to the baked production value. Non-production endpoints are not committed to this repository.
 
 ## Project layout
 
 ```
 src/
   app/            Components, services, and NgRx state for the element
-  assets/         Images bundled with the element
-  config/         Runtime configuration (per environment)
-  environments/   Build-time environment flags
+  environments/   Build-time flags and the production API endpoints
   main.ts         Bootstraps the element module
   formstream-element.module.ts   Declares the module and defines the custom element
 bundle.js         Concatenates the CLI output into formstream-bundle.js

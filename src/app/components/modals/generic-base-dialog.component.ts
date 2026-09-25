@@ -16,7 +16,8 @@ export abstract class GenericBaseDialogComponent<T,R>{
 
     // A document:mousedown handler used to sit here. Its body was empty — it bound the event target
     // and returned either way — so it listened on every mousedown in the page and did nothing with
-    // any of them. Closing on a click outside comes from the backdrop, not from here.
+    // any of them. Nothing replaces it: there is no click-to-dismiss anywhere, here or in the
+    // outlet, and DialogOutletComponent's doc comment explains why.
 
     constructor(public modalRef: DialogRef) {
     }

@@ -22,9 +22,8 @@ import { FormStreamConfigLoaded } from './app/state/actions/configuration.action
 import { AuthTokenService } from './app/services/token.service';
 import { QfHttpService } from './app/services/qf-http.service';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
+import { FocusTrapModule } from 'ngx-bootstrap/focus-trap';
 import { AttachmentsComponent } from './app/components/attachments/attachments.component';
-import { FormStreamModalService } from './app/services/formstream-modals.service';
-import { FormStreamDialogService } from './app/services/dialog/dialog.service';
 import { DialogOutletComponent } from './app/components/dialog-outlet/dialog-outlet.component';
 import { AttachmentsEffects } from './app/state/effects/attachments.effects';
 import { AttachmentsReducer } from './app/state/reducers/attachments.reducer';
@@ -82,7 +81,14 @@ export function initializeConfig(configLoader: ConfigLoader) {
     EffectsModule.forRoot([FormStreamEffects, ConfigurationEffects, AttachmentsEffects, WindowEffects, SigningGroupsEffects, SignEnvelopeEffects]),
     // ModalModule is gone with ngx-bootstrap's modals: its service could only mount on
     // document.body, outside the shadow boundary. Dialogs now render through DialogOutletComponent.
-    TooltipModule.forRoot()
+    TooltipModule.forRoot(),
+    // Keeps Tab inside an open dialog, which ngx-bootstrap gave us for free: its modal container
+    // carried this same directive, and dropping ModalModule dropped the trap with it. Reused
+    // rather than rewritten — a correct trap has to know what is really focusable, and this one
+    // already does. Costs 10.6 KB in the bundle: ngx-bootstrap is still a dependency for
+    // TooltipModule, but this entry point was being tree-shaken out. Its services are all
+    // providedIn root, so no forRoot().
+    FocusTrapModule
   ],
   declarations: [
     IconComponent,
@@ -107,8 +113,9 @@ export function initializeConfig(configLoader: ConfigLoader) {
   providers: [
     QfHttpService,
     AuthTokenService,
-    FormStreamDialogService,
-    FormStreamModalService,
+    // FormStreamDialogService and FormStreamModalService are provided by FormStreamComponent
+    // instead: they hold per-element state, and on the module every <quik-formstream> on the page
+    // would share one. See the note on that component's providers.
     SaveFormService,
     PrintFormService,
     FormRenderService,

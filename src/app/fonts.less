@@ -1,10 +1,21 @@
 /* Source Sans Pro (latin subset, weights 400/600/700) — bundled locally as base64
    data URIs so the injected stylesheet is fully self-contained (no network dependency,
    no relative font-path resolution against the host page). Generated from
-   @fontsource/source-sans-pro v5.2.5; regenerate from that package if the font is updated. */
+   @fontsource/source-sans-pro v5.2.5; regenerate from that package if the font is updated.
+
+   Declared under a private family name rather than 'Source Sans Pro', which is what the
+   font actually is. These three rules are the one part of the stylesheet that cannot live
+   in the shadow root — a font face declared inside one is never registered — so the element
+   appends them to the host page's document.head and leaves them there. Under the real name
+   they would merge into a host's own 'Source Sans Pro': same family, same weight and style,
+   and the last declaration in document order wins, so ours would take over the host page's
+   text with a latin-only subset that drops every other script. Measured: a host probe asking
+   for the family rendered 365.7px against our faces versus 361.3px without them. A name
+   nobody else will declare makes that collision impossible, which is the whole point of the
+   element not touching the page it is dropped into. */
 
 @font-face {
-  font-family: 'Source Sans Pro';
+  font-family: 'Quik FormStream Sans';
   font-style: normal;
   font-display: swap;
   font-weight: 400;
@@ -12,7 +23,7 @@
 }
 
 @font-face {
-  font-family: 'Source Sans Pro';
+  font-family: 'Quik FormStream Sans';
   font-style: normal;
   font-display: swap;
   font-weight: 600;
@@ -20,7 +31,7 @@
 }
 
 @font-face {
-  font-family: 'Source Sans Pro';
+  font-family: 'Quik FormStream Sans';
   font-style: normal;
   font-display: swap;
   font-weight: 700;

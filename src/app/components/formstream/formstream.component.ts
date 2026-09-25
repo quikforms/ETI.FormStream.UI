@@ -6,6 +6,7 @@ import { BaseComponent } from '../base.component';
 import { FormStreamSelectors } from '../../state/reducers/formstream.reducer';
 import { AuthTokenService } from '../../services/token.service';
 import { FormStreamModalService } from '../../services/formstream-modals.service';
+import { FormStreamDialogService } from '../../services/dialog/dialog.service';
 import { AttachedFile } from '../../state/models/attached-file.model';
 import { AttachmentsSelectors } from '../../state/reducers/attachments.reducer';
 import { TryRemoveUploadedFile } from '../../state/actions/attachments.actions';
@@ -23,7 +24,12 @@ import { SaveFormService } from '../../services/save-form.service';
 import { PrintFormService } from '../../services/print-form.service';
 import { LOGO_FORMSTREAM, LOGO_QUIK, LOGO_QUIK_BORDER } from './logos';
 
-/** Marks the global stylesheet inside a shadow root, so a re-init does not add a second copy. */
+/**
+ * Labels the global stylesheet inside a shadow root. The lookup it enables is a cheap guard, not
+ * a documented safety property: `ngOnInit` runs once per component and each instance gets a fresh
+ * shadow root, so there is no known path that reaches it twice. Disconnecting and re-appending the
+ * same node was measured and does not produce one.
+ */
 const GLOBAL_STYLE_ID = 'formstream-element-styles';
 
 /** Marks the element's font faces in document.head, so several instances register them once. */
@@ -43,7 +49,17 @@ const FONT_FACE_STYLE_ID = 'formstream-element-fonts';
   // encapsulation children. What it does NOT carry across is the global stylesheet (src/styles.less,
   // which is where Bootstrap comes from) — that one is injected by the bundle wrapper and is moved
   // separately.
-  encapsulation: ViewEncapsulation.ShadowDom
+  encapsulation: ViewEncapsulation.ShadowDom,
+
+  // Per element, not per page. Both services hold state that belongs to one <quik-formstream>: the
+  // dialog service keeps the outlet to render into and the stack of what is open, and it learns the
+  // outlet from DialogOutletComponent, which this template renders one of. Provided on the module
+  // they would be singletons shared by every element on the page, and `registerOutlet` is a plain
+  // assignment — so with two elements the last one to initialise would win and the first one's
+  // dialogs would open inside its neighbour's shadow root, both would draw a backdrop, and tearing
+  // either one down would close the other's dialogs. DialogOutletComponent resolves through this
+  // node injector because it sits in this template, so it gets the same instance this element does.
+  providers: [FormStreamDialogService, FormStreamModalService]
 })
 export class FormStreamComponent extends BaseComponent implements OnInit, OnDestroy {
 
@@ -134,8 +150,10 @@ export class FormStreamComponent extends BaseComponent implements OnInit, OnDest
   ngOnDestroy(): void {
     // Dialogs render inside this element's shadow root, so they are torn down with it and cannot
     // linger over the host's next page — which is what this call used to be for, back when
-    // ngx-bootstrap mounted them on document.body. It stays so that whoever is waiting on a
-    // dialog's `closed` hears it end, rather than having the subscription dropped in silence.
+    // ngx-bootstrap mounted them on document.body. It stays because closing a dialog is the only
+    // thing that runs its teardown: the ref settles and the service drops it from the stack and
+    // restores focus. Nothing currently subscribes to `DialogRef.closed`, so do not keep this
+    // call on the strength of that.
     this._notificationService.closeAllModals();
     super.ngOnDestroy();
   }

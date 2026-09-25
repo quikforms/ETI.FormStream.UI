@@ -9,11 +9,14 @@
    The `--fs-*` names are consumed across the element (render components included), so
    they are preserved.
 
-   Declared on `:root` so the tokens resolve everywhere the element's global stylesheet
-   paints — including ngx-bootstrap overlays (modal/tooltip/popover) that mount on
-   document.body, outside <quik-formstream>. Custom properties are inert (they restyle
-   nothing unless consumed) and the `--fs-` prefix avoids collisions, so this is not a
-   visual leak into the host. Under Shadow DOM (future) these move to `:host`. */
+   Written as `:root` but shipped as `:host`: the element renders inside a shadow root, where
+   `:root` matches nothing, so bundle.js rewrites this one selector on its way in. That rewrite
+   is checked — the build fails if it produces no tokens — because a sheet whose custom
+   properties never got declared renders a colourless element and reports nothing.
+
+   Keep this block a plain `:root { }` with the selector on its own, for the same reason: the
+   sheet also carries `svg:not(:root)` from the CSS reset, and the rewrite deliberately only
+   matches `:root` standing at a selector boundary. */
 :root {
   /* ---- Base palette (identity, OKLch) ---- */
   --fs-gray-101: oklch(0.3417 0.0041 196.96);

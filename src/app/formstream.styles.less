@@ -56,7 +56,7 @@
 quik-formstream {
     display: block;
     background: var(--fs-gray-10);
-    font-family: 'Source Sans Pro', sans-serif;
+    font-family: 'Quik FormStream Sans', sans-serif;
     font-size: 15px;
     line-height: 1.3;
     font-weight: 400;
@@ -917,10 +917,11 @@ quik-formstream label input[type=radio] {
 .modal-dialog.default-data.settings {
     position: relative;
     max-width: 450px;
-    /* This component's root is itself a `.modal-dialog`, nested inside ngx-bootstrap's own
-       `.modal-dialog` wrapper, so it inherits the generic `.modal-dialog .modal-dialog`
-       padding-top that would push the card down and leave the close (top:15px) floating above
-       it. Neutralize it here so the close sits inside the card's top-right corner. */
+    /* This component's root is itself a `.modal-dialog`, nested inside the outlet's own
+       `.modal-dialog` wrapper (see DialogOutletComponent), so it picks up the generic
+       `.modal-dialog .modal-dialog` padding-top that would push the card down and leave the
+       close (top:15px) floating above it. Neutralize it here so the close sits inside the
+       card's top-right corner. */
     padding-top: 0;
 
     > .close {

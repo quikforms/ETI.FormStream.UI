@@ -1,26 +1,38 @@
 import { Injectable } from "@angular/core";
-import { BsModalService } from "ngx-bootstrap/modal";
 import { Observable, Subject } from "rxjs";
-import { ModalService } from "./modal.service";
+import { FormStreamDialogService } from "./dialog/dialog.service";
 import { AttachmentsComponent, AttachmentsModel } from "../components/attachments/attachments.component";
 import { ConfirmComponent, ConfirmModel } from "../components/modals/confirm-modal.component";
 import { SendForSignatureComponent, SendForSignatureModel } from "../components/esign/send-for-signature.component";
 
+/**
+ * The element's dialogs.
+ *
+ * The public surface is unchanged from when this sat on ngx-bootstrap's `BsModalService`; what
+ * changed is underneath. Dialogs are now rendered inside the shadow root by
+ * {@link FormStreamDialogService} instead of being appended to the host's `document.body`, where
+ * they fell outside the style boundary in both directions.
+ */
 @Injectable()
-export class FormStreamModalService extends ModalService {
+export class FormStreamModalService {
 
-    constructor(public modalService: BsModalService) { super(modalService); }
+    constructor(private readonly dialogs: FormStreamDialogService) { }
 
-    showAttachmentsModal(model: AttachmentsModel){
-        this.showModal(AttachmentsComponent, model);
+    showAttachmentsModal(model: AttachmentsModel) {
+        this.dialogs.show(AttachmentsComponent, model as Partial<AttachmentsComponent>);
     }
 
     showSendForSignatureModal(model: SendForSignatureModel) {
-        this.showModal(SendForSignatureComponent, model);
+        this.dialogs.show(SendForSignatureComponent, model as Partial<SendForSignatureComponent>);
     }
 
     showConfirmationModal(model: ConfirmModel) {
-        this.showModal(ConfirmComponent, model);
+        this.dialogs.show(ConfirmComponent, model as Partial<ConfirmComponent>);
+    }
+
+    /** Closes every open dialog. Called when the element is torn down. */
+    closeAllModals() {
+        this.dialogs.closeAll();
     }
 
     // Prompt for a package name (first-ever save). Bridges the confirm modal's

@@ -2,7 +2,7 @@ import { Component, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ClearSelectedFiles, TryRemoveSelectedFile, TrySelectFiles, TryUploadFiles, UPLOAD_FILES_FAIL, UPLOAD_FILES_SUCCESS } from '../../state/actions/attachments.actions';
 import { SetErrorNotification } from '../../state/actions/notification.actions';
-import { BsModalRef } from 'ngx-bootstrap/modal';
+import { DialogRef } from '../../services/dialog/dialog-ref';
 import { BaseDialogComponent } from '../modals/base-dialog.component';
 import { Observable } from 'rxjs';
 import { AttachmentsSelectors } from '../../state/reducers/attachments.reducer';
@@ -36,7 +36,7 @@ export class AttachmentsComponent extends BaseDialogComponent<AttachmentsModel> 
     VALID_TYPES: ["application/pdf", "image/jpeg", "image/png", "image/gif", "image/bmp", "image/tiff"]
   }
 
-  constructor(private _store: Store<any>, public modalRef: BsModalRef, private actions: Actions) {
+  constructor(private _store: Store<any>, public modalRef: DialogRef, private actions: Actions) {
     super(modalRef);
   }
 

@@ -21,10 +21,11 @@ import { environment } from './environments/environment';
 import { FormStreamConfigLoaded } from './app/state/actions/configuration.actions';
 import { AuthTokenService } from './app/services/token.service';
 import { QfHttpService } from './app/services/qf-http.service';
-import { ModalModule } from 'ngx-bootstrap/modal';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { AttachmentsComponent } from './app/components/attachments/attachments.component';
 import { FormStreamModalService } from './app/services/formstream-modals.service';
+import { FormStreamDialogService } from './app/services/dialog/dialog.service';
+import { DialogOutletComponent } from './app/components/dialog-outlet/dialog-outlet.component';
 import { AttachmentsEffects } from './app/state/effects/attachments.effects';
 import { AttachmentsReducer } from './app/state/reducers/attachments.reducer';
 import { WindowEffects } from './app/state/effects/window.effects';
@@ -79,7 +80,8 @@ export function initializeConfig(configLoader: ConfigLoader) {
     HttpClientModule,
     StoreModule.forRoot({formStreamReducer: FormStreamReducer, authTokenReducer: AuthTokenReducer, configurationReducer: ConfigurationReducer, attachmentsReducer: AttachmentsReducer, notificationReducer: NotificationReducer, signingGroupsReducer: SigningGroupsReducer }),
     EffectsModule.forRoot([FormStreamEffects, ConfigurationEffects, AttachmentsEffects, WindowEffects, SigningGroupsEffects, SignEnvelopeEffects]),
-    ModalModule.forRoot(),
+    // ModalModule is gone with ngx-bootstrap's modals: its service could only mount on
+    // document.body, outside the shadow boundary. Dialogs now render through DialogOutletComponent.
     TooltipModule.forRoot()
   ],
   declarations: [
@@ -98,12 +100,14 @@ export function initializeConfig(configLoader: ConfigLoader) {
     TableComponent,
     FormatMaskDirective,
     ProportionalScrollDirective,
+    DialogOutletComponent,
     SendForSignatureComponent,
     SignersTableComponent
   ],
   providers: [
     QfHttpService,
     AuthTokenService,
+    FormStreamDialogService,
     FormStreamModalService,
     SaveFormService,
     PrintFormService,

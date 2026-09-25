@@ -42,41 +42,61 @@ let bundleContent =
   'if (!window.__formStreamElementLoaded) {\n' +
   '  window.__formStreamElementLoaded = true;\n';
 
-// 1) Expose the element's compiled styles as lazy, refcounted inject/remove helpers keyed by
-//    a marker id — they are NOT auto-injected. The element's component calls them on connect
-//    (ngOnInit) and disconnect (ngOnDestroy), so the global CSS only touches a page while a
-//    <quik-formstream> is actually present: a host page that never renders the element is
-//    not restyled, and leaving the element restores the host. (Full isolation via Shadow DOM
-//    is deferred to a future task.)
-const css = fs.readFileSync(path.join(distPath, cssFile), 'utf8')
-  // The element renders icons via the host's Font Awesome and uses no glyphicons, so the
-  // bundled Bootstrap/FA @font-face rules are dead weight here AND harmful: their relative
-  // font url()s 404 against the host page (the SPA returns its index.html -> "Failed to
-  // decode downloaded font" / OTS "invalid sfntVersion" errors), and they collide with the
-  // host's own same-family @font-face. Strip them so host glyphs keep using the host's fonts.
-  .replace(/@font-face\s*\{[^}]*?(?:Glyphicons Halflings|FontAwesome)[^}]*?\}/g, '')
+// 1) Expose the element's compiled global stylesheet as text. Nothing here injects it: the element
+//    renders inside a shadow root and puts these styles in that root itself (see
+//    FormStreamComponent.adoptGlobalStyles). That is what keeps the two directions apart — the
+//    rules cannot reach the host page, and the host's own CSS cannot reach the template.
+//    The old refcounted document.head injector is gone with the boundary; a shadow root is
+//    destroyed with its element, so there is nothing left to count.
+const compiledCss = fs.readFileSync(path.join(distPath, cssFile), 'utf8')
+  // The element ships its icons as inline SVG (src/app/components/icon), so the bundled
+  // Bootstrap/FA @font-face rules are dead weight here AND harmful: their relative font url()s
+  // 404 against the host page (the SPA returns its index.html -> "Failed to decode downloaded
+  // font" / OTS "invalid sfntVersion" errors), and they collide with a host's own same-family
+  // @font-face. Strip them.
+  .replace(/@font-face\s*\{[^}]*?(?:Glyphicons Halflings|FontAwesome)[^}]*?\}/g, '');
+
+// The @font-face rules are the one part of the stylesheet that cannot travel into the shadow root:
+// a font face declared inside one is not registered by the browser, whatever form its src takes, so
+// every rule asking for the family silently falls back. Measured rather than assumed — with all
+// three inside the root, 48px of "Source Sans Pro" rendered at exactly the width of a family that
+// does not exist. They are handed over separately and the element puts them in document.head.
+const FONT_FACE_RULE = /@font-face\s*\{[^}]*\}/g;
+const fontFaceCss = (compiledCss.match(FONT_FACE_RULE) || []).join('\n');
+
+// Inside a shadow root the element's own tag name matches nothing: a host is not a descendant of
+// its own shadow tree, so `quik-formstream ul` has no ancestor to hang off and `quik-formstream {}`
+// never reaches the host. These selectors were written to scope the global styles to the element
+// back when they lived in the document; `:host` is what does that job here. Both shapes translate
+// by the same substitution — `quik-formstream {}` becomes `:host {}`, and `quik-formstream ul`
+// becomes `:host ul`, which does reach into the tree.
+//
+// Not cosmetic: the rule on the element itself carries display:block, the background and the base
+// font-family, so without this the element lays out as an inline box in the host's default font.
+// `:root` has the same problem and one more trap. The element's 66 --fs-* custom properties are
+// declared on it, and 88 declarations read them, so leaving it dead is most of what "the styles are
+// broken" looks like. It is matched only where it stands as a whole selector — preceded by nothing,
+// a comma or a closing brace — because the sheet also carries `svg:not(:root)` from the CSS reset,
+// and rewriting that one would change what it selects rather than fix it.
+//
+// Moving the defaults onto :host keeps host theming working: a rule in the outer page that sets
+// --fs-* on the element or an ancestor still wins, because outer rules beat :host rules and custom
+// properties inherit across the boundary.
+const shadowCss = compiledCss
+  .replace(FONT_FACE_RULE, '')
+  .replace(/quik-formstream/g, ':host')
+  .replace(/(^|[,}]):root\s*\{/g, '$1:host{');
+
+// Escaped for the template literal each one is embedded in below.
+const forTemplateLiteral = (text) => text
   .replace(/\\/g, '\\\\')   // escape backslashes
   .replace(/`/g, '\\`')     // escape backticks
   .replace(/\$/g, '\\$');   // escape template-literal interpolation
+
 bundleContent +=
   '(function () {\n' +
-  '  var STYLE_ID = \'formstream-element-styles\';\n' +
-  `  var css = \`${css}\`;\n` +
-  '  var refCount = 0;\n' +
-  '  window.__formStreamInjectStyles = function () {\n' +
-  '    refCount++;\n' +
-  '    if (document.getElementById(STYLE_ID)) { return; }\n' +
-  '    var style = document.createElement(\'style\');\n' +
-  '    style.id = STYLE_ID;\n' +
-  '    style.textContent = css;\n' +
-  '    document.head.appendChild(style);\n' +
-  '  };\n' +
-  '  window.__formStreamRemoveStyles = function () {\n' +
-  '    refCount = Math.max(0, refCount - 1);\n' +
-  '    if (refCount > 0) { return; }\n' +
-  '    var style = document.getElementById(STYLE_ID);\n' +
-  '    if (style) { style.remove(); }\n' +
-  '  };\n' +
+  `  window.__formStreamStyles = \`${forTemplateLiteral(shadowCss)}\`;\n` +
+  `  window.__formStreamFontFaces = \`${forTemplateLiteral(fontFaceCss)}\`;\n` +
   '})();\n';
 
 // 2) Concatenate the JS chunks in load order.

@@ -132,8 +132,10 @@ export class FormStreamComponent extends BaseComponent implements OnInit, OnDest
   }
 
   ngOnDestroy(): void {
-    // Modals mount on document.body, outside the element, so they survive the element being torn down
-    // (e.g. the host navigating away). Dismiss any open modal here so nothing lingers over the new page.
+    // Dialogs render inside this element's shadow root, so they are torn down with it and cannot
+    // linger over the host's next page — which is what this call used to be for, back when
+    // ngx-bootstrap mounted them on document.body. It stays so that whoever is waiting on a
+    // dialog's `closed` hears it end, rather than having the subscription dropped in silence.
     this._notificationService.closeAllModals();
     super.ngOnDestroy();
   }

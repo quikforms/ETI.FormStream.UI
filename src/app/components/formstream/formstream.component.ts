@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ElementRef, HostListener, ViewEncapsulation } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { filter, map, takeUntil } from 'rxjs/operators';
 import { combineLatest, Observable, of } from 'rxjs';
@@ -6,6 +6,7 @@ import { BaseComponent } from '../base.component';
 import { FormStreamSelectors } from '../../state/reducers/formstream.reducer';
 import { AuthTokenService } from '../../services/token.service';
 import { FormStreamModalService } from '../../services/formstream-modals.service';
+import { FormStreamDialogService } from '../../services/dialog/dialog.service';
 import { AttachedFile } from '../../state/models/attached-file.model';
 import { AttachmentsSelectors } from '../../state/reducers/attachments.reducer';
 import { TryRemoveUploadedFile } from '../../state/actions/attachments.actions';
@@ -23,10 +24,42 @@ import { SaveFormService } from '../../services/save-form.service';
 import { PrintFormService } from '../../services/print-form.service';
 import { LOGO_FORMSTREAM, LOGO_QUIK, LOGO_QUIK_BORDER } from './logos';
 
+/**
+ * Labels the global stylesheet inside a shadow root. The lookup it enables is a cheap guard, not
+ * a documented safety property: `ngOnInit` runs once per component and each instance gets a fresh
+ * shadow root, so there is no known path that reaches it twice. Disconnecting and re-appending the
+ * same node was measured and does not produce one.
+ */
+const GLOBAL_STYLE_ID = 'formstream-element-styles';
+
+/** Marks the element's font faces in document.head, so several instances register them once. */
+const FONT_FACE_STYLE_ID = 'formstream-element-fonts';
+
 @Component({
   selector: 'quik-formstream',
   templateUrl: './formstream.component.html',
-  styleUrls: ['./formstream.component.less']
+  styleUrls: ['./formstream.component.less'],
+
+  // The element is dropped into pages we do not control, so its styles and the host's must not
+  // reach each other. This is the boundary that stops both directions at once: everything the
+  // template renders moves inside a shadow root, where the host's selectors do not match and the
+  // element's own rules cannot escape.
+  //
+  // Angular replicates every component's styles into this shadow root, including the emulated-
+  // encapsulation children. What it does NOT carry across is the global stylesheet (src/styles.less,
+  // which is where Bootstrap comes from) — that one is injected by the bundle wrapper and is moved
+  // separately.
+  encapsulation: ViewEncapsulation.ShadowDom,
+
+  // Per element, not per page. Both services hold state that belongs to one <quik-formstream>: the
+  // dialog service keeps the outlet to render into and the stack of what is open, and it learns the
+  // outlet from DialogOutletComponent, which this template renders one of. Provided on the module
+  // they would be singletons shared by every element on the page, and `registerOutlet` is a plain
+  // assignment — so with two elements the last one to initialise would win and the first one's
+  // dialogs would open inside its neighbour's shadow root, both would draw a backdrop, and tearing
+  // either one down would close the other's dialogs. DialogOutletComponent resolves through this
+  // node injector because it sits in this template, so it gets the same instance this element does.
+  providers: [FormStreamDialogService, FormStreamModalService]
 })
 export class FormStreamComponent extends BaseComponent implements OnInit, OnDestroy {
 
@@ -103,9 +136,7 @@ export class FormStreamComponent extends BaseComponent implements OnInit, OnDest
   }
 
   ngOnInit(): void {
-    // Inject the element's global styles only now that an element is actually connected
-    // (refcounted in the bundle); removed again in ngOnDestroy so the host is left untouched.
-    (window as any).__formStreamInjectStyles?.();
+    this.adoptGlobalStyles();
 
     this.attachedFiles$
       .pipe(filter(files => !!files), takeUntil(this.destroyed$))
@@ -117,11 +148,69 @@ export class FormStreamComponent extends BaseComponent implements OnInit, OnDest
   }
 
   ngOnDestroy(): void {
-    // Modals mount on document.body, outside the element, so they survive the element being torn down
-    // (e.g. the host navigating away). Dismiss any open modal here so nothing lingers over the new page.
+    // Dialogs render inside this element's shadow root, so they are torn down with it and cannot
+    // linger over the host's next page — which is what this call used to be for, back when
+    // ngx-bootstrap mounted them on document.body. It stays because closing a dialog is the only
+    // thing that runs its teardown: the ref settles and the service drops it from the stack and
+    // restores focus. Nothing currently subscribes to `DialogRef.closed`, so do not keep this
+    // call on the strength of that.
     this._notificationService.closeAllModals();
-    (window as any).__formStreamRemoveStyles?.();
     super.ngOnDestroy();
+  }
+
+  /**
+   * Puts the compiled global stylesheet — Bootstrap plus the element's own global rules — inside
+   * this element's shadow root.
+   *
+   * The bundle carries it as text instead of injecting it into the document, because with the
+   * shadow boundary in place there is nowhere else for it to go: left in document.head it would
+   * restyle the host page, which is the thing this element must stop doing, and it would not reach
+   * the template either, because the boundary keeps document styles out.
+   *
+   * Prepended rather than appended so Angular's component styles, which the framework has already
+   * put in this root, keep overriding it — the same precedence the two had when both lived in the
+   * document. Nothing has to undo this: the shadow root is destroyed with the element, which is
+   * also why the old refcount is gone; each instance now owns its own copy.
+   */
+  private adoptGlobalStyles(): void {
+    this.registerFontFaces();
+
+    const root: ShadowRoot | null = this.el.nativeElement.shadowRoot;
+    const css: string = (window as any).__formStreamStyles;
+
+    if (!root || !css || root.querySelector(`#${GLOBAL_STYLE_ID}`)) { return; }
+
+    const style = document.createElement('style');
+    style.id = GLOBAL_STYLE_ID;
+    style.textContent = css;
+    root.prepend(style);
+  }
+
+  /**
+   * Registers the element's own font faces on the host document.
+   *
+   * This is the single exception to keeping everything inside the shadow root, and it is not a
+   * choice: a font face declared inside a shadow root is not registered by the browser, whatever
+   * form its src takes, so every rule that asks for the family falls back instead. The declarations
+   * have to be reachable from the document for the family to resolve at all.
+   *
+   * It is not a way back in for the leak this element exists to close. A @font-face declares a
+   * family; it applies nothing on its own, so no host element changes unless the host itself asks
+   * for that family by name.
+   *
+   * Left in place when the element goes away, deliberately. Removing it would mean counting
+   * instances again — the very thing the shadow boundary let us delete — and would risk pulling the
+   * faces out from under a second element still rendering with them.
+   */
+  private registerFontFaces(): void {
+    const css: string = (window as any).__formStreamFontFaces;
+
+    if (!css || document.getElementById(FONT_FACE_STYLE_ID)) { return; }
+
+    const style = document.createElement('style');
+    style.id = FONT_FACE_STYLE_ID;
+    style.textContent = css;
+    document.head.appendChild(style);
   }
 
   private intakeFormStreamData(rawPayload: any): void {
@@ -169,7 +258,7 @@ export class FormStreamComponent extends BaseComponent implements OnInit, OnDest
 
   scrollToSection(id: string): void {
     if (!id) { return; }
-    const target = this.el.nativeElement.querySelector<HTMLElement>(`[id="${id}"]`) || document.getElementById(id);
+    const target = this.ownDom.querySelector<HTMLElement>(`[id="${id}"]`);
     target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     this.showSections = false;
   }
@@ -250,13 +339,33 @@ export class FormStreamComponent extends BaseComponent implements OnInit, OnDest
     });
   }
 
+  /**
+   * Where this element's own rendered nodes actually live.
+   *
+   * The shadow boundary empties the host's light DOM, so a lookup from `nativeElement` finds
+   * nothing, and `document.getElementById` cannot reach inside either — ids in a shadow tree are
+   * not in the document's id map. Anything looking for a node the template rendered starts here.
+   */
+  private get ownDom(): ParentNode {
+    return this.el.nativeElement.shadowRoot ?? this.el.nativeElement;
+  }
+
   // Close the sections popover on outside click.
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (!this.showSections) { return; }
-    const target = event.target as HTMLElement | null;
-    if (!target || target.closest('.view-sections-tab')) { return; }
-    const sectionsPopover = this.el.nativeElement.querySelector('.sections-popover');
+
+    // composedPath()[0], not event.target: a listener bound on the document sees the event after
+    // retargeting, where the target has been rewritten to the host element for every click that
+    // happened inside the shadow tree. Read that way, a click on the tab itself looks like a click
+    // on the element as a whole, the guard below never matches, and the popover closes on the very
+    // click that opened it.
+    const target = event.composedPath()[0] as HTMLElement | null;
+
+    if (!target || typeof target.closest !== 'function') { return; }
+    if (target.closest('.view-sections-tab')) { return; }
+
+    const sectionsPopover = this.ownDom.querySelector('.sections-popover');
     if (!sectionsPopover || !sectionsPopover.contains(target)) { this.showSections = false; }
   }
 }

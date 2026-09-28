@@ -62,10 +62,27 @@ The repository is an Angular workspace. The element ships as an Angular applicat
 companion library project may be added later so the same code can also be consumed directly as an
 Angular module by first-party Angular hosts (avoiding a second Angular/Zone runtime on those pages).
 
+## Styling
+
+The element renders inside a shadow root, so its styles and the host page's cannot reach each
+other: nothing the element ships is applied to the page around it, and host page rules do not
+change how forms render.
+
+Theming is through custom properties, which do cross the boundary. Set any of the `--fs-*`
+properties **on the element itself** and it picks them up:
+
+```css
+quik-formstream {
+  --fs-brand: #0b5fff;
+}
+```
+
+Setting them on an ancestor does not work. The element declares its own defaults on `:host`, and
+an own declaration beats a value inherited from further up, so the default wins. The rule has to
+match `<quik-formstream>`.
+
 ## Roadmap
 
-- **Style isolation via Shadow DOM** — fully encapsulate the element's styles so it never touches
-  the host page's CSS.
 - **Dual consumption** — expose an Angular library entry point alongside the standalone element.
 - **npm distribution** — publish the package to npm. Distribution over versioned public CDN URLs is
   already in place; see [RELEASING.md](RELEASING.md).

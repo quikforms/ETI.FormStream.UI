@@ -4,10 +4,11 @@
    global classes (e.g. the V1 `bg-background`). Scoped selectors are kept specific
    (`.modal-dialog …`) so they win over the generic global modal rules. */
 
-/* Font set here (component-scoped) rather than on the global `.modal`, so it doesn't bleed
-   onto the host's own ngx-bootstrap modals while the element's styles are injected. */
+/* Stated here rather than inherited: a host-page rule matching <quik-formstream> beats `:host`,
+   and that value inherits into the dialog. An explicit declaration inside the root does not lose
+   that way. Same reasoning as the attachments and send-for-signature dialogs. */
 .modal-dialog {
-  font-family: 'Source Sans Pro', sans-serif;
+  font-family: 'Quik FormStream Sans', sans-serif;
 }
 
 .modal-dialog .settings {

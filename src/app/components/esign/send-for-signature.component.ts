@@ -3,7 +3,7 @@ import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { BsModalRef } from 'ngx-bootstrap/modal';
+import { DialogRef } from '../../services/dialog/dialog-ref';
 import { BaseDialogComponent } from '../modals/base-dialog.component';
 import { EsignData } from '../../state/models/Response/esign-data.model';
 import { DisplaySigner } from '../../state/models/esign/display-signer.model';
@@ -76,7 +76,7 @@ export class SendForSignatureComponent extends BaseDialogComponent<SendForSignat
   signingGroupsLoading$!: Observable<boolean>;
   hasSigningGroups$!: Observable<boolean>;
 
-  constructor(public modalRef: BsModalRef, private _store: Store<any>, private _actions: Actions) {
+  constructor(public modalRef: DialogRef, private _store: Store<any>, private _actions: Actions) {
     super(modalRef);
   }
 

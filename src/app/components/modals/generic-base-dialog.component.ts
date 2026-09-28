@@ -1,5 +1,5 @@
 import { Component, HostListener } from '@angular/core';
-import { BsModalRef } from 'ngx-bootstrap/modal';
+import { DialogRef } from '../../services/dialog/dialog-ref';
 
 
 
@@ -14,13 +14,12 @@ export abstract class GenericBaseDialogComponent<T,R>{
         }
     }
 
-    @HostListener('document:mousedown', ['$event', '$event.target']) handleMousedown(event: any, targetElement: HTMLElement): void {
-        if (!targetElement) {
-            return;
-        }
-    }
+    // A document:mousedown handler used to sit here. Its body was empty — it bound the event target
+    // and returned either way — so it listened on every mousedown in the page and did nothing with
+    // any of them. Nothing replaces it: there is no click-to-dismiss anywhere, here or in the
+    // outlet, and DialogOutletComponent's doc comment explains why.
 
-    constructor(public modalRef: BsModalRef) {
+    constructor(public modalRef: DialogRef) {
     }
 
     close() {

@@ -1,7 +1,8 @@
-/* ngx-bootstrap mounts this modal on document.body, outside <quik-formstream>, so the host font
-   doesn't reach it and the card must be self-styled here (as the attachments/confirm modals do). */
+/* Stated here rather than inherited: a host-page rule matching <quik-formstream> beats `:host`,
+   and that value inherits into the dialog. An explicit declaration inside the root does not lose
+   that way. Same reasoning as the attachments and confirm dialogs. */
 .modal-dialog {
-  font-family: 'Source Sans Pro', sans-serif;
+  font-family: 'Quik FormStream Sans', sans-serif;
 }
 
 .modal-dialog.send-for-signature {
@@ -9,10 +10,10 @@
   width: 98%;
   max-width: 1860px;
   margin: 30px auto;
-  /* This component root is a `.modal-dialog` nested inside ngx-bootstrap's own `.modal-dialog`,
-     so it inherits the generic `.modal-dialog .modal-dialog` padding-top that pushes the card
-     down and leaves the close (top:15px) floating above it, on the overlay. Neutralize it so
-     the close sits inside the card's top-right corner (matching the host). */
+  /* This component root is a `.modal-dialog` nested inside the outlet's own `.modal-dialog`
+     (see DialogOutletComponent), so it picks up the generic `.modal-dialog .modal-dialog`
+     padding-top that pushes the card down and leaves the close (top:15px) floating above it,
+     on the overlay. Neutralize it so the close sits inside the card's top-right corner. */
   padding-top: 0;
 }
 

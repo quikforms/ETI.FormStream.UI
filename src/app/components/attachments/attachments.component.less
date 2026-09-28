@@ -1,8 +1,10 @@
-/* ngx-bootstrap mounts this modal on document.body, outside <quik-formstream>, so the host
-   font-family doesn't reach it. Set it here (component-scoped) rather than on the global
-   `.modal`, so it doesn't bleed onto the host's own modals while the styles are injected. */
+/* Stated here rather than inherited, and that still matters now that the dialog renders inside
+   the element's shadow root instead of on document.body. `:host` carries the same family, but a
+   host-page rule matching <quik-formstream> beats `:host` — the outer tree wins for normal
+   declarations, whatever the specificity — and that value then inherits down into the dialog.
+   An explicit declaration on a node inside the root does not lose that way. */
 .modal-dialog {
-  font-family: 'Source Sans Pro', sans-serif;
+  font-family: 'Quik FormStream Sans', sans-serif;
 }
 
 select.fs-input {

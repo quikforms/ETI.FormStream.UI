@@ -4,12 +4,12 @@ import { Store } from "@ngrx/store";
 import { catchError, map, switchMap, withLatestFrom } from "rxjs/operators";
 import { of as observableOf } from 'rxjs';
 import { QfHttpService } from "../../services/qf-http.service";
-import { ClearSelectedFiles, LOAD_ATTACHMENTS_FAIL, LoadAttachmentsFail, LoadAttachmentsSuccess, REMOVE_UPLOADED_FILE_FAIL, RemoveSelectedFileFail, RemoveSelectedFileSuccess, RemoveUploadedFileFail, RemoveUploadedFileSuccess, SelectFilesFail, SelectFilesSuccess, SetAttachments, TRY_LOAD_ATTACHMENTS, TRY_REMOVE_SELECTED_FILE, TRY_REMOVE_UPLOADED_FILE, TRY_SELECT_FILES, TRY_UPLOAD_FILES, TryLoadAttachments, TryRemoveSelectedFile, TryRemoveUploadedFile, TrySelectFiles, TryUploadFiles, UPLOAD_FILES_FAIL, UPLOAD_FILES_SUCCESS, UploadFilesFail, UploadFilesSuccess } from "../actions/attachments.actions";
+import { ClearSelectedFiles, LOAD_ATTACHMENTS_FAIL, LoadAttachmentsFail, LoadAttachmentsSuccess, REMOVE_UPLOADED_FILE_FAIL, REMOVE_UPLOADED_FILE_SUCCESS, RemoveSelectedFileFail, RemoveSelectedFileSuccess, RemoveUploadedFileFail, RemoveUploadedFileSuccess, SelectFilesFail, SelectFilesSuccess, SetAttachments, TRY_LOAD_ATTACHMENTS, TRY_REMOVE_SELECTED_FILE, TRY_REMOVE_UPLOADED_FILE, TRY_SELECT_FILES, TRY_UPLOAD_FILES, TryLoadAttachments, TryRemoveSelectedFile, TryRemoveUploadedFile, TrySelectFiles, TryUploadFiles, UPLOAD_FILES_FAIL, UPLOAD_FILES_SUCCESS, UploadFilesFail, UploadFilesSuccess } from "../actions/attachments.actions";
 import { SET_FORMSTREAM_DATA, SetFormStreamData } from "../actions/formstream.actions";
 import { ConfigurationSelectors } from "../reducers/configuration.reducer";
 import { AttachedFile } from "../models/attached-file.model";
 import { AttachmentsSelectors } from "../reducers/attachments.reducer";
-import { SetErrorNotification } from "../actions/notification.actions";
+import { SetErrorNotification, SetSuccessNotification } from "../actions/notification.actions";
 import { extractApiErrorMessage } from "./api-error.util";
 
 @Injectable()
@@ -124,6 +124,36 @@ export class AttachmentsEffects {
                         catchError(error => observableOf(new LoadAttachmentsFail(error)))
                     );
             })
+        )
+    );
+
+    // Confirm the two attachment operations the user starts, mirroring the save/print/e-sign flows,
+    // which have always said so. Uploading and removing completed silently: the list in the dialog
+    // redrew and nothing else was said, which reads as "did that work?" on a slow connection.
+    //
+    // Deliberately only these two. Loading is not one of them: LOAD_ATTACHMENTS_SUCCESS fires when
+    // the dialog opens and on every refresh, so a toast there would announce something the user
+    // never asked for.
+    //
+    // `attachedFiles` on the success action carries the files this upload added, not the whole list
+    // (the reducer appends them to what was already there), so counting it is safe.
+    uploadFilesSuccess = createEffect(() => this._actions
+        .pipe(
+            ofType<UploadFilesSuccess>(UPLOAD_FILES_SUCCESS),
+            map(action =>
+                new SetSuccessNotification(
+                    (action.attachedFiles?.length ?? 0) === 1
+                        ? 'Attachment uploaded successfully.'
+                        : 'Attachments uploaded successfully.'
+                )
+            )
+        )
+    );
+
+    removeUploadedFileSuccess = createEffect(() => this._actions
+        .pipe(
+            ofType<RemoveUploadedFileSuccess>(REMOVE_UPLOADED_FILE_SUCCESS),
+            map(() => new SetSuccessNotification('Attachment removed successfully.'))
         )
     );
 

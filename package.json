@@ -15,7 +15,7 @@
     "build-local": "ng build formstream-element --configuration local && node bundle.js",
     "test": "jest",
     "preversion": "npm test",
-    "version": "npm run build-prod && git add dist/formstream/formstream-bundle.js",
+    "version": "npm run build-prod && git add dist/formstream/formstream-bundle.js dist/formstream/3rdpartylicenses.txt",
     "watch": "concurrently --names \"ELEMENT,BUNDLE\" --prefix-colors \"green,magenta\" \"ng build formstream-element --configuration local --watch --delete-output-path=false\" \"nodemon --watch dist/formstream/main.js --watch dist/formstream/styles.css --delay 2 --exec \\\"node bundle.js --lenient\\\"\""
   },
   "dependencies": {

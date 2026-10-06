@@ -1,7 +1,8 @@
 # Releasing
 
-The compiled bundle `dist/formstream/formstream-bundle.js` is committed to this repository and
-distributed over public CDNs straight from the Git tags — no server, no account, no manual upload.
+The compiled bundle `dist/formstream/formstream-bundle.js` and its third-party license notices
+(`dist/formstream/3rdpartylicenses.txt`) are committed to this repository and distributed over public
+CDNs straight from the Git tags — no server, no account, no manual upload.
 
 ## Cut a release
 
@@ -9,10 +10,11 @@ Releases go through a pull request — direct pushes to the default branch are n
 **tag** is what the CDNs serve, and tags are not covered by branch protection, so it is pushed after
 the version-bump PR is merged.
 
-1. Create a release branch and bump the version. `npm version` runs the `version` script first,
-   which rebuilds the production bundle (`npm run build-prod`) and stages it, so the release commit
-   always contains a fresh `dist/formstream/formstream-bundle.js`; it then bumps `package.json`,
-   commits, and creates the `vX.Y.Z` tag locally:
+1. Create a release branch and bump the version. `npm version` runs the unit tests first
+   (`preversion`) and stops if any fail. It then bumps `package.json`, and runs the `version` script,
+   which rebuilds the production bundle (`npm run build-prod`) and stages it with its license notices,
+   so the release commit always contains a fresh `dist/formstream/formstream-bundle.js`; finally it
+   commits and creates the `vX.Y.Z` tag locally:
 
    ```bash
    git checkout -b release/vX.Y.Z

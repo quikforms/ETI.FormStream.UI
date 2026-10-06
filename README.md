@@ -36,6 +36,9 @@ single self-contained `formstream-bundle.js` under `dist/formstream/`.
 | `npm run build-local` | Development bundle against the local environment config |
 | `npm run watch` | Rebuild and re-bundle on change (development) |
 
+Every build also writes the third-party license notices of everything bundled to
+`dist/formstream/3rdpartylicenses.txt`, which ships next to the bundle.
+
 ## Testing
 
 ```bash

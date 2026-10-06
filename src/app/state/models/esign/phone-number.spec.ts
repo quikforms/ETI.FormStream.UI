@@ -34,11 +34,11 @@ describe('normalizeSignerPhone', () => {
   });
 
   it('keeps the country code for other countries', () => {
-    const result = normalizeSignerPhone('+52 55 1234 5678');
+    const result = normalizeSignerPhone('+61 491 570 006');
 
     expect(result.isValid).toBe(true);
-    expect(result.countryCallingCode).toBe('52');
-    expect(result.nationalNumber).toBe('5512345678');
+    expect(result.countryCallingCode).toBe('61');
+    expect(result.nationalNumber).toBe('491570006');
   });
 
   it.each([[''], ['   '], ['1234567'], ['555-01ab']])('treats %p as not usable', input => {

@@ -2,7 +2,6 @@ import { createFeatureSelector, createSelector } from "@ngrx/store";
 import { buildIdCheckOptions, IdCheckKey } from "../models/esign/esign-auth-type.model";
 import { EsignOption } from "../models/esign/esign-option.model";
 import {
-    CLEAR_IDENTITY_VERIFICATIONS,
     IdentityVerificationsActions,
     LOAD_IDENTITY_VERIFICATIONS_FAIL,
     LOAD_IDENTITY_VERIFICATIONS_SUCCESS,
@@ -11,64 +10,63 @@ import {
 
 const selectFeature = createFeatureSelector<IdentityVerificationsState>('identityVerificationsReducer');
 
-// Whether the connected DocuSign account supports phone authentication, which decides whether
-// "Passcode via SMS/Voice" is offered.
-export interface IdentityVerificationsState {
+// Whether a DocuSign account supports phone authentication, which decides whether "Passcode via SMS/Voice"
+// is offered for it.
+export interface AccountIdentityVerifications {
     capable: boolean;
     loading: boolean;
-    failed: boolean;
 }
 
-const selectHasPhoneAuthentication = createSelector(selectFeature,
-    (state: IdentityVerificationsState) => !!(state && state.capable));
+// The answers per account, by identityVerificationsKey. Kept per account because the store is shared by
+// every element on the page: a dialog only ever reads the account it asked about.
+export interface IdentityVerificationsState {
+    accounts: { [key: string]: AccountIdentityVerifications };
+}
 
-// The ID Check options for the current account. Built here, not in the reducer, so the store holds only
-// the capability; derived from the capability alone, so a new list is only produced when it changes.
-const selectIdCheckOptions = createSelector(selectHasPhoneAuthentication,
-    (hasPhoneAuthentication: boolean): EsignOption<IdCheckKey>[] => buildIdCheckOptions(hasPhoneAuthentication));
+// The two possible option lists, built once so a selector returns the same list while the answer does not
+// change.
+const ID_CHECK_OPTIONS_WITHOUT_PASSCODE = buildIdCheckOptions(false);
+const ID_CHECK_OPTIONS_WITH_PASSCODE = buildIdCheckOptions(true);
 
+const selectAccount = (key: string) => createSelector(selectFeature,
+    (state: IdentityVerificationsState): AccountIdentityVerifications | undefined => state?.accounts?.[key]);
+
+const selectHasPhoneAuthentication = (key: string) => createSelector(selectAccount(key),
+    (account): boolean => !!account?.capable);
+
+// Selector factories: each dialog creates its selectors once, for the account it asks about.
 export const IdentityVerificationsSelectors = {
-    selectIdCheckOptions,
-    selectIdentityVerificationsLoading: createSelector(selectFeature,
-        (state: IdentityVerificationsState) => !!(state && state.loading)),
     selectHasPhoneAuthentication,
+    selectIdentityVerificationsLoading: (key: string) => createSelector(selectAccount(key),
+        (account): boolean => !!account?.loading),
+    selectIdCheckOptions: (key: string) => createSelector(selectHasPhoneAuthentication(key),
+        (hasPhoneAuthentication: boolean): EsignOption<IdCheckKey>[] =>
+            hasPhoneAuthentication ? ID_CHECK_OPTIONS_WITH_PASSCODE : ID_CHECK_OPTIONS_WITHOUT_PASSCODE),
 };
+
+// The options for a dialog that has no account to ask about.
+export const idCheckOptionsWithoutPhoneAuthentication = (): EsignOption<IdCheckKey>[] => ID_CHECK_OPTIONS_WITHOUT_PASSCODE;
 
 export const initialIdentityVerificationsState: IdentityVerificationsState = {
-    capable: false,
-    loading: false,
-    failed: false
+    accounts: {}
 };
+
+const withAccount = (state: IdentityVerificationsState, key: string, account: AccountIdentityVerifications) =>
+    ({ ...state, accounts: { ...state.accounts, [key]: account } });
 
 export function IdentityVerificationsReducer(
     state: IdentityVerificationsState = initialIdentityVerificationsState,
     action: IdentityVerificationsActions
 ) {
     switch (action.type) {
-        // A new request discards the previous answer: it may belong to another account.
+        // Asking again about the same account keeps its previous answer until the new one arrives.
         case TRY_LOAD_IDENTITY_VERIFICATIONS:
-            return {
-                ...state,
-                capable: false,
-                loading: true,
-                failed: false
-            };
+            return withAccount(state, action.key, { capable: !!state.accounts[action.key]?.capable, loading: true });
         case LOAD_IDENTITY_VERIFICATIONS_SUCCESS:
-            return {
-                ...state,
-                loading: false,
-                capable: action.hasPhoneAuthentication
-            };
+            return withAccount(state, action.key, { capable: action.hasPhoneAuthentication, loading: false });
         // Not knowing reads as not supported: the option is hidden, never offered on a guess.
         case LOAD_IDENTITY_VERIFICATIONS_FAIL:
-            return {
-                ...state,
-                loading: false,
-                failed: true,
-                capable: false
-            };
-        case CLEAR_IDENTITY_VERIFICATIONS:
-            return initialIdentityVerificationsState;
+            return withAccount(state, action.key, { capable: false, loading: false });
         default:
             return state;
     }

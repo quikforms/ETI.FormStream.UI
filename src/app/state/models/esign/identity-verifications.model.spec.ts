@@ -1,4 +1,4 @@
-import { buildIdentityVerificationsRequest, hasPhoneAuthentication } from './identity-verifications.model';
+import { buildIdentityVerificationsRequest, hasPhoneAuthentication, identityVerificationsKey } from './identity-verifications.model';
 
 describe('buildIdentityVerificationsRequest', () => {
   it('asks about the connection named in the sign settings', () => {
@@ -23,6 +23,23 @@ describe('buildIdentityVerificationsRequest', () => {
     [{ SignEnvironmentID: 0, AuthUserID: 'Test connection' }]
   ])('has nothing to ask when the settings are %p', signSettings => {
     expect(buildIdentityVerificationsRequest(signSettings as any)).toBeNull();
+  });
+});
+
+describe('identityVerificationsKey', () => {
+  it('tells apart connections and environments', () => {
+    const keys = [
+      { SignEnvironmentID: 2, AuthUserID: 'Connection A' },
+      { SignEnvironmentID: 2, AuthUserID: 'Connection B' },
+      { SignEnvironmentID: 1, AuthUserID: 'Connection A' }
+    ].map(identityVerificationsKey);
+
+    expect(new Set(keys).size).toBe(3);
+  });
+
+  it('is the same for the same connection', () => {
+    expect(identityVerificationsKey({ SignEnvironmentID: 2, AuthUserID: 'Connection A' }))
+      .toBe(identityVerificationsKey({ SignEnvironmentID: 2, AuthUserID: 'Connection A' }));
   });
 });
 

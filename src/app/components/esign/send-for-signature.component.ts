@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
-import { combineLatest, Observable, Subject } from 'rxjs';
+import { combineLatest, Observable, of, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { DialogRef } from '../../services/dialog/dialog-ref';
 import { BaseDialogComponent } from '../modals/base-dialog.component';
@@ -12,8 +12,8 @@ import { SEND_TYPE_OPTIONS, DocusignSendType } from '../../state/models/esign/es
 import { IdCheckKey } from '../../state/models/esign/esign-auth-type.model';
 import { EsignOption } from '../../state/models/esign/esign-option.model';
 import { buildIdentityVerificationsRequest } from '../../state/models/esign/identity-verifications.model';
-import { ClearIdentityVerifications, TryLoadIdentityVerifications } from '../../state/actions/identity-verifications.actions';
-import { IdentityVerificationsSelectors } from '../../state/reducers/identity-verifications.reducer';
+import { TryLoadIdentityVerifications } from '../../state/actions/identity-verifications.actions';
+import { idCheckOptionsWithoutPhoneAuthentication, IdentityVerificationsSelectors } from '../../state/reducers/identity-verifications.reducer';
 import { SigningGroupOption } from '../../state/models/esign/signing-group-option.model';
 import { buildSigningGroupsRequest } from '../../state/models/esign/signing-group.builder';
 import { TryLoadSigningGroups } from '../../state/actions/signing-groups.actions';
@@ -115,25 +115,31 @@ export class SendForSignatureComponent extends BaseDialogComponent<SendForSignat
   }
 
   // Asks whether the DocuSign account supports phone authentication, which decides whether "Passcode via
-  // SMS/Voice" is offered. Dispatched before reading the store: the store is shared by every element on the
-  // page, so this modal must never act on an answer that another one loaded. Without a DocuSign connection
-  // there is nothing to ask and the answer is cleared instead.
+  // SMS/Voice" is offered. The store keeps one answer per account and is shared by every element on the
+  // page, so this modal reads only the account it asked about. Without a DocuSign connection there is
+  // nothing to ask, and the standard options are offered.
   private loadIdentityChecks(): void {
     const request = this.esignData?.vendor === 'Docusign'
       ? buildIdentityVerificationsRequest(this.esignData.signSettings)
       : null;
-    this._store.dispatch(request ? new TryLoadIdentityVerifications(request) : new ClearIdentityVerifications());
 
-    this.idCheckOptions$ = this._store.select(IdentityVerificationsSelectors.selectIdCheckOptions);
-    this.identityChecksLoading$ = this._store.select(IdentityVerificationsSelectors.selectIdentityVerificationsLoading);
+    let hasPhoneAuthentication$: Observable<boolean>;
+    if (request) {
+      const lookup = new TryLoadIdentityVerifications(request);
+      this._store.dispatch(lookup);
+      this.idCheckOptions$ = this._store.select(IdentityVerificationsSelectors.selectIdCheckOptions(lookup.key));
+      this.identityChecksLoading$ = this._store.select(IdentityVerificationsSelectors.selectIdentityVerificationsLoading(lookup.key));
+      hasPhoneAuthentication$ = this._store.select(IdentityVerificationsSelectors.selectHasPhoneAuthentication(lookup.key));
+    } else {
+      this.idCheckOptions$ = of(idCheckOptionsWithoutPhoneAuthentication());
+      this.identityChecksLoading$ = of(false);
+      hasPhoneAuthentication$ = of(false);
+    }
 
     // Once the answer is in and phone authentication is not supported, nobody keeps the option. Nothing is
     // retired while the lookup is in flight; Sign Now stays available meanwhile, since the option cannot be
     // selected before it is offered.
-    combineLatest([
-      this.identityChecksLoading$,
-      this._store.select(IdentityVerificationsSelectors.selectHasPhoneAuthentication)
-    ])
+    combineLatest([this.identityChecksLoading$, hasPhoneAuthentication$])
       .pipe(takeUntil(this.destroyed$))
       .subscribe(([loading, hasPhoneAuthentication]) => {
         if (!loading && !hasPhoneAuthentication) { this.controller.retirePasscodeViaSmsVoice(); }

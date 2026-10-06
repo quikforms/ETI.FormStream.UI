@@ -205,6 +205,7 @@ export class SendForSignatureComponent extends BaseDialogComponent<SendForSignat
   onSendTypeChange(change: SignerFieldChange<DocusignSendType>): void { this.controller.updateSendType(change.signer, change.value); }
   onIdCheckChange(change: SignerFieldChange): void { this.controller.updateIdCheck(change.signer, change.value); }
   onPhoneChange(change: SignerFieldChange): void { this.controller.updatePhone(change.signer, change.value); }
+  onPhoneCommit(signer: DisplaySigner): void { this.controller.commitPhone(signer); }
   onSigningGroupChange(change: SignerFieldChange): void { this.controller.updateSigningGroup(change.signer, change.value); }
 
   // Validates the signers, then assembles the DocuSign envelope from the baseline + the modal's

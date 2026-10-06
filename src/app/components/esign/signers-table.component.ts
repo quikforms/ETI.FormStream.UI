@@ -62,6 +62,8 @@ export class SignersTableComponent {
   @Output() sendTypeChange = new EventEmitter<SignerFieldChange<DocusignSendType>>();
   @Output() idCheckChange = new EventEmitter<SignerFieldChange>();
   @Output() phoneChange = new EventEmitter<SignerFieldChange>();
+  // The phone field was left: the number is complete and can be formatted.
+  @Output() phoneCommit = new EventEmitter<DisplaySigner>();
   @Output() orderChange = new EventEmitter<SignerFieldChange<number>>();
   @Output() signingGroupChange = new EventEmitter<SignerFieldChange>();
   @Output() moveUp = new EventEmitter<DisplaySigner>();

@@ -53,14 +53,44 @@ describe('SignersController — phone', () => {
     expect(controller.isFieldInvalid(signer, 'phone')).toBe(true);
   });
 
-  it('formats the number as it is typed', () => {
+  it('keeps the number as typed while it is typed, and formats it once the field is left', () => {
     const controller = new SignersController(signersFrom(recipient('Jane Doe')), '2');
     const [signer] = controller.signers;
 
     controller.updatePhone(signer, '2025550191');
+    expect(signer.phone).toBe('2025550191');
 
+    controller.commitPhone(signer);
     expect(signer.phone).toBe('(202) 555-0191');
     expect(signer.signingRoles[0].phone).toBe('(202) 555-0191');
+  });
+
+  it('never turns a US number into a foreign one while it is typed digit by digit', () => {
+    const controller = new SignersController(signersFrom(recipient('Jane Doe')), '2');
+    const [signer] = controller.signers;
+    const typed = '3125550100';
+
+    // The field hands back what it holds plus the new digit, as an input does on each keystroke.
+    const shown = [...typed].map(digit => {
+      controller.updatePhone(signer, signer.phone + digit);
+      return signer.phone;
+    });
+    controller.commitPhone(signer);
+
+    expect(shown).toEqual([...typed].map((_, i) => typed.slice(0, i + 1)));
+    expect(signer.phone).toBe('(312) 555-0100');
+    expect(controller.validate()).toBe(true);
+  });
+
+  it('checks the number again whenever it changes', () => {
+    const controller = new SignersController(signersFrom(recipient('Jane Doe')), '2');
+    const [signer] = controller.signers;
+    controller.updatePhone(signer, '2025550191');
+    expect(controller.validate()).toBe(true);
+
+    controller.updatePhone(signer, '202555');
+
+    expect(controller.isFieldInvalid(signer, 'phone')).toBe(true);
   });
 
   it('flags a number that is not usable, and explains it, once a send is attempted', () => {

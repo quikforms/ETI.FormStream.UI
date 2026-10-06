@@ -44,6 +44,9 @@ export class SignersController {
   // they hold stops being offered.
   private readonly defaultIdCheck: string;
 
+  // The last phone validated for each signer and its answer (see isValidPhone).
+  private readonly phoneValidity = new WeakMap<DisplaySigner, { phone: string; isValid: boolean }>();
+
   constructor(public signers: DisplaySigner[] = [], defaultIdCheck?: string, messaging?: EsignMessaging) {
     // Seed the global ID Check from the customer's admin default (normalized to a known auth-type code,
     // else "No Identity Check"); starting in global mode then applies it to every signer.
@@ -119,9 +122,17 @@ export class SignersController {
     this.syncPersonToRoles(signer);
   }
 
-  // Formats the number as it is typed.
+  // Keeps the number exactly as typed. It is only read as a whole once the field is left (commitPhone):
+  // a partly typed number is not a number yet, and reading it as one can turn a US number into a foreign
+  // one halfway through (3125550 reads as +31 25550). Validation and the request read the full text either
+  // way.
   updatePhone(signer: DisplaySigner, value: string): void {
-    this.setPhone(signer, normalizeSignerPhone(value).display);
+    this.setPhone(signer, value);
+  }
+
+  // Formats the number once the user is done typing it. An unusable number stays as typed.
+  commitPhone(signer: DisplaySigner): void {
+    this.setPhone(signer, normalizeSignerPhone(signer.phone).display);
   }
 
   // ── Passcode via SMS/Voice ────────────────────────────────────────────
@@ -376,7 +387,7 @@ export class SignersController {
 
     // A phone number is required and must be plausible only when the signer uses a phone-based check.
     if (field === 'phone') {
-      return isPhoneBasedIdCheck(signer.idCheck) && !this.isValidPhone(signer.phone);
+      return isPhoneBasedIdCheck(signer.idCheck) && !this.isValidPhone(signer);
     }
 
     // Name and email are required only for a signer that will actually be sent to (a real send type).
@@ -393,8 +404,15 @@ export class SignersController {
     return this.signers.some(signer => this.isFieldInvalid(signer, 'phone'));
   }
 
-  private isValidPhone(phone: string): boolean {
-    return normalizeSignerPhone(phone).isValid;
+  // Validity is read from the template on every change detection pass, so the last answer is kept per
+  // signer and the number is only parsed again when it changes.
+  private isValidPhone(signer: DisplaySigner): boolean {
+    const phone = signer.phone ?? '';
+    const checked = this.phoneValidity.get(signer);
+    if (checked?.phone === phone) { return checked.isValid; }
+    const isValid = normalizeSignerPhone(phone).isValid;
+    this.phoneValidity.set(signer, { phone, isValid });
+    return isValid;
   }
 
   // Name/email are required for a signer that will be sent to, unless a signing group stands in for the

@@ -95,7 +95,8 @@
         <td *ngIf="showPhoneColumn">
           <input type="text" class="fs-input" *ngIf="isPhoneCheck(signer.idCheck)" [ngModel]="signer.phone"
             [class.fs-input--invalid]="fieldValidator(signer, 'phone')"
-            (ngModelChange)="phoneChange.emit({ signer: signer, value: $event })">
+            (ngModelChange)="phoneChange.emit({ signer: signer, value: $event })"
+            (blur)="phoneCommit.emit(signer)">
         </td>
         <td *ngIf="showFormsIncludedColumn" class="fs-signers__forms-included">
           <ng-container *ngIf="formsIncluded(signer) as forms">

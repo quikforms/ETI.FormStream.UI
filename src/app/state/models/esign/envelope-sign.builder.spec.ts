@@ -18,6 +18,13 @@ describe('buildRecipients', () => {
     expect(sent.PhoneNumberCountryCode).toBe('1');
   });
 
+  it('sends the ID Check only as its code, never as the modal key', () => {
+    const [sent] = buildRecipients(withCheck(signersFrom(recipient('Jane Doe')), PASSCODE_VIA_SMS_VOICE, '(202) 555-0191'));
+
+    expect(sent).not.toHaveProperty('idCheck');
+    expect(Object.values(sent)).not.toContain(PASSCODE_VIA_SMS_VOICE);
+  });
+
   it('keeps the country code of an international number', () => {
     const [sent] = buildRecipients(withCheck(signersFrom(recipient('Jane Doe')), '2', '+44 20 7946 0958'));
 
@@ -56,6 +63,14 @@ describe('hasInternationalPhone', () => {
 
   it('is true when a phone sent is outside the US', () => {
     expect(hasInternationalPhone([{ PhoneNumberCountryCode: '1' }, { PhoneNumberCountryCode: '44' }])).toBe(true);
+  });
+
+  it('treats a number that shares +1 with the US, such as a Canadian one, like a US number', () => {
+    const recipients = buildRecipients(withCheck(signersFrom(recipient('Jane Doe')), '2', '+1 416 555 0123'));
+
+    expect(recipients[0].PhoneNumber).toBe('4165550123');
+    expect(recipients[0].PhoneNumberCountryCode).toBe('1');
+    expect(hasInternationalPhone(recipients)).toBe(false);
   });
 });
 

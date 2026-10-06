@@ -7,9 +7,10 @@ import { normalizeSignerPhone, US_COUNTRY_CALLING_CODE } from './phone-number';
 
 // Flattens the display signers into their signing roles and maps each into a DocuSign recipient. Only
 // roles that identify a real recipient are included — a name AND email, or a signing group — which
-// naturally drops unassigned baseline roles. IdentityCheck is sent as an int. A phone-based check sends
-// the phone as its national number and country calling code (both empty when the number is not
-// usable); any other check sends no phone at all, even if the signer still holds one. Pure.
+// naturally drops unassigned baseline roles. The ID Check travels only as IdentityCheck, an int; the
+// modal's own key for it (which can be a name such as Passcode via SMS/Voice's) stays in the modal. A
+// phone-based check sends the phone as its national number and country calling code (both empty when the
+// number is not usable); any other check sends no phone at all, even if the signer still holds one. Pure.
 export function buildRecipients(signers: DisplaySigner[]): any[] {
   return signers
     .flatMap(signer => signer.signingRoles)
@@ -17,9 +18,9 @@ export function buildRecipients(signers: DisplaySigner[]): any[] {
       (!!role.name && role.name.trim() !== '' && !!role.mail && role.mail.trim() !== '') ||
       (!!role.signingGroup && role.signingGroup.trim() !== ''))
     .map(role => {
-      const { phone, ...rest } = role;
-      const recipient: any = { ...rest, IdentityCheck: toDocusignIdentityCheckValue(role.idCheck) };
-      if (isPhoneBasedIdCheck(role.idCheck)) {
+      const { phone, idCheck, ...rest } = role;
+      const recipient: any = { ...rest, IdentityCheck: toDocusignIdentityCheckValue(idCheck) };
+      if (isPhoneBasedIdCheck(idCheck)) {
         const normalized = normalizeSignerPhone(phone);
         recipient.phone = phone;
         recipient.PhoneNumber = normalized.isValid ? normalized.nationalNumber : '';
@@ -29,8 +30,11 @@ export function buildRecipients(signers: DisplaySigner[]): any[] {
     });
 }
 
-// Whether any recipient is sent with a phone number outside the US. Read from the built recipients, so
-// only phones that actually travel count — a number a signer holds under a non-phone check does not.
+// Whether any recipient is sent with a phone number outside calling code +1. Read from the built
+// recipients, so only phones that actually travel count — a number a signer holds under a non-phone check
+// does not. The international path is for other calling codes: numbers that share +1 with the US (Canada,
+// the Caribbean) go out like US numbers, as their national number and code 1, which is how they are
+// dialed. They are still displayed in international form, since they are not US numbers.
 export function hasInternationalPhone(recipients: any[]): boolean {
   return recipients.some(recipient =>
     !!recipient.PhoneNumberCountryCode && recipient.PhoneNumberCountryCode !== US_COUNTRY_CALLING_CODE);

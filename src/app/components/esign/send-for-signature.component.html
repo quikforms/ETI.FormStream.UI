@@ -50,10 +50,13 @@
               <fs-icon name="circle-info" class="fs-sfs__info-icon"
                 [tooltip]="tooltips.idCheck" placement="bottom"></fs-icon>
             </label>
-            <select class="fs-input" [ngModel]="controller.globalIdCheck"
+            <div *ngIf="identityChecksLoading$ | async" class="fs-sfs__loading" role="status">
+              <fs-icon name="spinner" [spin]="true"></fs-icon> Loading identity checks...
+            </div>
+            <select *ngIf="!(identityChecksLoading$ | async)" class="fs-input" [ngModel]="controller.globalIdCheck"
               [disabled]="!controller.useGlobalConfiguration"
               (ngModelChange)="onGlobalIdCheckChange($event)">
-              <option *ngFor="let option of idCheckOptions" [value]="option.keyName.toString()">{{ option.name }}</option>
+              <option *ngFor="let option of (idCheckOptions$ | async)" [value]="option.keyName.toString()">{{ option.name }}</option>
             </select>
           </div>
           <div class="fs-sfs__config-field">
@@ -61,7 +64,7 @@
               <fs-icon name="circle-info" class="fs-sfs__info-icon"
                 [tooltip]="tooltips.signingGroup" placement="bottom"></fs-icon>
             </label>
-            <div *ngIf="signingGroupsLoading$ | async" class="fs-sfs__loading">
+            <div *ngIf="signingGroupsLoading$ | async" class="fs-sfs__loading" role="status">
               <fs-icon name="spinner" [spin]="true"></fs-icon> Loading signing groups...
             </div>
             <select *ngIf="!(signingGroupsLoading$ | async)" class="fs-input"
@@ -97,6 +100,8 @@
           [signingGroupsLoading]="(signingGroupsLoading$ | async) || false"
           [hasSigningGroups]="(hasSigningGroups$ | async) || false"
           [signingGroupDisabled]="isSigningGroupDisabled"
+          [idCheckOptions]="(idCheckOptions$ | async) || []"
+          [identityChecksLoading]="(identityChecksLoading$ | async) || false"
           [nameEmailDisabled]="isNameEmailDisabled"
           [showFormsIncludedColumn]="showFormsIncluded"
           [formsIncluded]="formNamesFor"
@@ -111,6 +116,10 @@
           (moveDown)="onMoveDown($event)"
           (removeRecipient)="onRemoveRecipient($event)">
         </fs-signers-table>
+
+        <p *ngIf="controller.hasInvalidPhone" class="fs-sfs__validation-message" role="alert">
+          Please enter a valid phone number (e.g., (555) 123-4567 or +44 20 7946 0958).
+        </p>
 
         <div class="fs-sfs__table-actions">
           <button type="button" class="fs-btn main-color" (click)="onAddRecipient()">

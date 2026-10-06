@@ -1,11 +1,12 @@
 import { DisplaySigner } from '../../state/models/esign/display-signer.model';
 import { ESignSigner } from '../../state/models/esign/esign-signer.model';
 import { DocusignSendType } from '../../state/models/esign/esign-send-type.model';
-import { DocusignAuthType, isPhoneBasedIdCheck, normalizeIdCheck } from '../../state/models/esign/esign-auth-type.model';
+import { DocusignAuthType, isPhoneBasedIdCheck, normalizeIdCheck, PASSCODE_VIA_SMS_VOICE } from '../../state/models/esign/esign-auth-type.model';
 import { EsignMessaging } from '../../state/models/esign/esign-messaging.builder';
+import { normalizeSignerPhone } from '../../state/models/esign/phone-number';
 
-// A pragmatic email check (a stricter address grammar is not warranted here). Phone validity only
-// requires enough digits to be a plausible number, since the element has no phone-parsing library.
+// A pragmatic email check (a stricter address grammar is not warranted here). Phone numbers are read
+// with the shared phone-number rules, the same ones the request builder uses.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Owns the signers grid state and every operation on it (per-signer edits and their cascades, the
@@ -39,14 +40,25 @@ export class SignersController {
   messageSubject = 'Please e-sign these forms';
   messageBody = '';
 
+  // The customer's admin default ID Check, normalized. It is what a signer falls back to when an option
+  // they hold stops being offered.
+  private readonly defaultIdCheck: string;
+
   constructor(public signers: DisplaySigner[] = [], defaultIdCheck?: string, messaging?: EsignMessaging) {
     // Seed the global ID Check from the customer's admin default (normalized to a known auth-type code,
     // else "No Identity Check"); starting in global mode then applies it to every signer.
-    this.globalIdCheck = normalizeIdCheck(defaultIdCheck);
+    this.defaultIdCheck = normalizeIdCheck(defaultIdCheck);
+    this.globalIdCheck = this.defaultIdCheck;
     if (messaging) {
       this.messageSubject = messaging.subject;
       this.messageBody = messaging.body;
     }
+    // A person is validated and sent with one number, so their roles get the first phone any of them
+    // carries in the launch (formatted), not just the first role's — which may be empty.
+    this.signers.forEach(signer => {
+      const launchPhone = signer.phone || signer.signingRoles.find(role => !!role.phone)?.phone || '';
+      this.setPhone(signer, normalizeSignerPhone(launchPhone).display);
+    });
     this.applyGlobalConfig();
   }
 
@@ -90,13 +102,11 @@ export class SignersController {
     signer.signingRoles.forEach(role => (role.sendType = value));
   }
 
+  // The phone is kept when the check changes: it reappears if a phone-based check is chosen again, and the
+  // request builder only sends it with a phone-based check.
   updateIdCheck(signer: DisplaySigner, value: string): void {
     signer.idCheck = value;
     signer.signingRoles.forEach(role => (role.idCheck = value));
-    // A non-phone check has no phone: clear it so a now-hidden, stale number is never carried or sent.
-    if (!isPhoneBasedIdCheck(value)) {
-      this.setPhone(signer, '');
-    }
   }
 
   updateName(signer: DisplaySigner, value: string): void {
@@ -109,8 +119,26 @@ export class SignersController {
     this.syncPersonToRoles(signer);
   }
 
+  // Formats the number as it is typed.
   updatePhone(signer: DisplaySigner, value: string): void {
-    this.setPhone(signer, value);
+    this.setPhone(signer, normalizeSignerPhone(value).display);
+  }
+
+  // ── Passcode via SMS/Voice ────────────────────────────────────────────
+  // The option is only offered while the account supports phone authentication. When it stops being
+  // offered, whoever holds it falls back to the admin default.
+
+  retirePasscodeViaSmsVoice(): void {
+    if (this.useGlobalConfiguration) {
+      if (this.globalIdCheck === PASSCODE_VIA_SMS_VOICE) { this.setGlobalIdCheck(this.defaultIdCheck); }
+      return;
+    }
+    // Per-signer mode: only the rows holding the option change. setGlobalIdCheck would rewrite every
+    // row's send type and ID Check, so the global value is updated on its own.
+    if (this.globalIdCheck === PASSCODE_VIA_SMS_VOICE) { this.globalIdCheck = this.defaultIdCheck; }
+    this.signers
+      .filter(signer => signer.idCheck === PASSCODE_VIA_SMS_VOICE)
+      .forEach(signer => this.updateIdCheck(signer, this.defaultIdCheck));
   }
 
   updateOrder(signer: DisplaySigner, value: number): void {
@@ -359,8 +387,14 @@ export class SignersController {
     return field === 'email' && !EMAIL_PATTERN.test(signer.mail.trim());
   }
 
+  // Whether a phone shown to the user is not usable, once a send has been attempted. Drives the inline
+  // message that explains the highlighted phone fields.
+  get hasInvalidPhone(): boolean {
+    return this.signers.some(signer => this.isFieldInvalid(signer, 'phone'));
+  }
+
   private isValidPhone(phone: string): boolean {
-    return (phone ?? '').replace(/\D/g, '').length >= 7;
+    return normalizeSignerPhone(phone).isValid;
   }
 
   // Name/email are required for a signer that will be sent to, unless a signing group stands in for the

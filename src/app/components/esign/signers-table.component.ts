@@ -1,7 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { DisplaySigner } from '../../state/models/esign/display-signer.model';
 import { SEND_TYPE_OPTIONS, DocusignSendType } from '../../state/models/esign/esign-send-type.model';
-import { ID_CHECK_OPTIONS, isPhoneBasedIdCheck } from '../../state/models/esign/esign-auth-type.model';
+import { ID_CHECK_OPTIONS, IdCheckKey, isPhoneBasedIdCheck } from '../../state/models/esign/esign-auth-type.model';
+import { EsignOption } from '../../state/models/esign/esign-option.model';
 import { SigningGroupOption } from '../../state/models/esign/signing-group-option.model';
 import { ESIGN_TOOLTIPS } from './esign-tooltips';
 
@@ -45,6 +46,11 @@ export class SignersTableComponent {
   @Input() hasSigningGroups = false;
   @Input() signingGroupDisabled: (signer: DisplaySigner) => boolean = () => false;
 
+  // ID Check inputs: the options offered for the current account (they depend on its phone
+  // authentication support) and whether that support is still being looked up.
+  @Input() idCheckOptions: EsignOption<IdCheckKey>[] = ID_CHECK_OPTIONS;
+  @Input() identityChecksLoading = false;
+
   // Whether the FORMS INCLUDED column is shown (toggled from the modal). Injected predicate returns the
   // names of the forms a signer signs; the count and tooltip are derived from it. The computation lives
   // outside the table (it needs the baseline), keeping the table presentational.
@@ -69,7 +75,6 @@ export class SignersTableComponent {
   }
 
   readonly sendTypeOptions = SEND_TYPE_OPTIONS;
-  readonly idCheckOptions = ID_CHECK_OPTIONS;
   readonly tooltips = ESIGN_TOOLTIPS;
 
   // The PHONE column is shown only when some signer uses a phone-based identity check.

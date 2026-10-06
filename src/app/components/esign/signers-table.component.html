@@ -74,13 +74,16 @@
           </select>
         </td>
         <td *ngIf="!useGlobalConfiguration">
-          <select class="fs-input" [ngModel]="signer.idCheck"
+          <div *ngIf="identityChecksLoading" class="fs-signers__loading" role="status">
+            <fs-icon name="spinner" [spin]="true"></fs-icon> Loading identity checks...
+          </div>
+          <select *ngIf="!identityChecksLoading" class="fs-input" [ngModel]="signer.idCheck"
             (ngModelChange)="idCheckChange.emit({ signer: signer, value: $event })">
             <option *ngFor="let option of idCheckOptions" [value]="option.keyName.toString()">{{ option.name }}</option>
           </select>
         </td>
         <td *ngIf="!useGlobalConfiguration">
-          <div *ngIf="signingGroupsLoading" class="fs-signers__loading">
+          <div *ngIf="signingGroupsLoading" class="fs-signers__loading" role="status">
             <fs-icon name="spinner" [spin]="true"></fs-icon> Loading signing groups...
           </div>
           <select *ngIf="!signingGroupsLoading" class="fs-input" [ngModel]="signer.signingGroup || ''"

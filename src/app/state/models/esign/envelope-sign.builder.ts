@@ -1,13 +1,16 @@
 import { EsignData } from '../Response/esign-data.model';
 import { FormValueInput, serializeForms } from '../render/form-value.serializer';
 import { DisplaySigner } from './display-signer.model';
-import { isPhoneBasedIdCheck } from './esign-auth-type.model';
+import { isPhoneBasedIdCheck, toDocusignIdentityCheckValue } from './esign-auth-type.model';
 import { EnvelopeSignRequest } from './envelope-sign-request.model';
+import { normalizeSignerPhone, US_COUNTRY_CALLING_CODE } from './phone-number';
 
 // Flattens the display signers into their signing roles and maps each into a DocuSign recipient. Only
 // roles that identify a real recipient are included — a name AND email, or a signing group — which
-// naturally drops unassigned baseline roles. IdentityCheck is sent as an int; phone fields ride along
-// only for phone-based checks (SMS/Phone). Pure — shared by the builder and the send validation.
+// naturally drops unassigned baseline roles. The ID Check travels only as IdentityCheck, an int; the
+// modal's own key for it (which can be a name such as Passcode via SMS/Voice's) stays in the modal. A
+// phone-based check sends the phone as its national number and country calling code (both empty when the
+// number is not usable); any other check sends no phone at all, even if the signer still holds one. Pure.
 export function buildRecipients(signers: DisplaySigner[]): any[] {
   return signers
     .flatMap(signer => signer.signingRoles)
@@ -15,14 +18,26 @@ export function buildRecipients(signers: DisplaySigner[]): any[] {
       (!!role.name && role.name.trim() !== '' && !!role.mail && role.mail.trim() !== '') ||
       (!!role.signingGroup && role.signingGroup.trim() !== ''))
     .map(role => {
-      const identityCheck = parseInt(role.idCheck, 10) || 0;
-      const recipient: any = { ...role, IdentityCheck: identityCheck };
-      if (isPhoneBasedIdCheck(role.idCheck)) {
-        recipient.PhoneNumber = role.phone || '';
-        recipient.PhoneNumberCountryCode = '';
+      const { phone, idCheck, ...rest } = role;
+      const recipient: any = { ...rest, IdentityCheck: toDocusignIdentityCheckValue(idCheck) };
+      if (isPhoneBasedIdCheck(idCheck)) {
+        const normalized = normalizeSignerPhone(phone);
+        recipient.phone = phone;
+        recipient.PhoneNumber = normalized.isValid ? normalized.nationalNumber : '';
+        recipient.PhoneNumberCountryCode = normalized.isValid ? normalized.countryCallingCode : '';
       }
       return recipient;
     });
+}
+
+// Whether any recipient is sent with a phone number outside calling code +1. Read from the built
+// recipients, so only phones that actually travel count — a number a signer holds under a non-phone check
+// does not. The international path is for other calling codes: numbers that share +1 with the US (Canada,
+// the Caribbean) go out like US numbers, as their national number and code 1, which is how they are
+// dialed. They are still displayed in international form, since they are not US numbers.
+export function hasInternationalPhone(recipients: any[]): boolean {
+  return recipients.some(recipient =>
+    !!recipient.PhoneNumberCountryCode && recipient.PhoneNumberCountryCode !== US_COUNTRY_CALLING_CODE);
 }
 
 // Refreshes the baked PrintData field values from the live form so the signed PDF reflects the advisor's
@@ -84,15 +99,16 @@ export function buildEnvelopeSignRequest(params: {
     EditablePDF: true
   }, formValues);
 
+  const recipients = buildRecipients(signers);
   const signData = {
     ...(esignData.signData ?? {}),
-    Recipients: buildRecipients(signers)
+    Recipients: recipients
   };
 
   return {
     CustomerID: customerId,
     SignSettings: signSettings,
     PackagesData: [{ PackageId: packageId, PrintData: printData, SignData: signData }],
-    EnableInternationalPhoneNumber: false
+    EnableInternationalPhoneNumber: hasInternationalPhone(recipients)
   };
 }

@@ -147,5 +147,22 @@ jsFiles.forEach(file => {
 // Close the idempotency guard opened above.
 bundleContent += '}\n';
 
+// 3) Third-party license notices. Every build extracts them into their own file (see
+//    `extractLicenses` in angular.json) instead of leaving them inline, so the bundle points to it.
+//    That file covers each package's own license; libphonenumber-js also ships the Apache 2.0
+//    license of the phone number metadata it derives from Google's libphonenumber, which is not part
+//    of that extraction, so it is added here — once, since this script also runs repeatedly against
+//    the same output during `npm run watch`.
+const noticesFile = path.join(distPath, '3rdpartylicenses.txt');
+const metadataNoticeHeading = 'libphonenumber-js (phone number metadata, derived from Google libphonenumber)';
+if (fs.existsSync(noticesFile)) {
+  if (!fs.readFileSync(noticesFile, 'utf8').includes(metadataNoticeHeading)) {
+    const apacheNotice = fs.readFileSync(
+      path.resolve(__dirname, 'node_modules/libphonenumber-js/LICENSE.Apache'), 'utf8');
+    fs.appendFileSync(noticesFile, `\n${metadataNoticeHeading}\nApache-2.0\n${apacheNotice}`);
+  }
+  bundleContent = '/*! Third-party licenses: 3rdpartylicenses.txt */\n' + bundleContent;
+}
+
 fs.writeFileSync(outputFile, bundleContent);
 console.log('✅ formstream-bundle.js generated');

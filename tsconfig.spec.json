@@ -1,0 +1,16 @@
+/*
+ * Unit test configuration, used by ts-jest.
+ * Inherits shared settings from the workspace base (./tsconfig.json); Jest runs on Node, so modules
+ * compile to CommonJS here while the element build keeps ES modules. allowJs lets the Angular and NgRx
+ * packages, which ship as ES modules, be compiled the same way.
+ */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/spec",
+    "module": "commonjs",
+    "allowJs": true,
+    "types": ["jest", "node"]
+  },
+  "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
+}

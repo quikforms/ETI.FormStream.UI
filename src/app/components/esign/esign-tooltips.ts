@@ -15,6 +15,6 @@ export const ESIGN_TOOLTIPS = {
     'they are managed by the signing group.',
   order: 'Use arrow buttons to reorder or manually enter numbers. Lower numbers sign first.',
   phone:
-    'Accepts US numbers (e.g. 2025550191) and international numbers with a leading + ' +
-    '(e.g. +52 1 512 744 796).'
+    'Accepts US numbers (e.g. 2025550191) and international numbers with a leading + and the country ' +
+    'code (e.g. +44 20 7946 0958). Numbers without a + are read as US numbers.'
 } as const;

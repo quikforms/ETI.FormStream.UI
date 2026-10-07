@@ -48,6 +48,8 @@ import { SendForSignatureComponent } from './app/components/esign/send-for-signa
 import { SignersTableComponent } from './app/components/esign/signers-table.component';
 import { SigningGroupsReducer } from './app/state/reducers/signing-groups.reducer';
 import { SigningGroupsEffects } from './app/state/effects/signing-groups.effects';
+import { IdentityVerificationsReducer } from './app/state/reducers/identity-verifications.reducer';
+import { IdentityVerificationsEffects } from './app/state/effects/identity-verifications.effects';
 import { SignEnvelopeEffects } from './app/state/effects/sign-envelope.effects';
 
 @Injectable()
@@ -77,8 +79,8 @@ export function initializeConfig(configLoader: ConfigLoader) {
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    StoreModule.forRoot({formStreamReducer: FormStreamReducer, authTokenReducer: AuthTokenReducer, configurationReducer: ConfigurationReducer, attachmentsReducer: AttachmentsReducer, notificationReducer: NotificationReducer, signingGroupsReducer: SigningGroupsReducer }),
-    EffectsModule.forRoot([FormStreamEffects, ConfigurationEffects, AttachmentsEffects, WindowEffects, SigningGroupsEffects, SignEnvelopeEffects]),
+    StoreModule.forRoot({formStreamReducer: FormStreamReducer, authTokenReducer: AuthTokenReducer, configurationReducer: ConfigurationReducer, attachmentsReducer: AttachmentsReducer, notificationReducer: NotificationReducer, signingGroupsReducer: SigningGroupsReducer, identityVerificationsReducer: IdentityVerificationsReducer }),
+    EffectsModule.forRoot([FormStreamEffects, ConfigurationEffects, AttachmentsEffects, WindowEffects, SigningGroupsEffects, IdentityVerificationsEffects, SignEnvelopeEffects]),
     // ModalModule is gone with ngx-bootstrap's modals: its service could only mount on
     // document.body, outside the shadow boundary. Dialogs now render through DialogOutletComponent.
     TooltipModule.forRoot(),

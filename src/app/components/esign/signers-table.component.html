@@ -74,13 +74,16 @@
           </select>
         </td>
         <td *ngIf="!useGlobalConfiguration">
-          <select class="fs-input" [ngModel]="signer.idCheck"
+          <div *ngIf="identityChecksLoading" class="fs-signers__loading" role="status">
+            <fs-icon name="spinner" [spin]="true"></fs-icon> Loading identity checks...
+          </div>
+          <select *ngIf="!identityChecksLoading" class="fs-input" [ngModel]="signer.idCheck"
             (ngModelChange)="idCheckChange.emit({ signer: signer, value: $event })">
             <option *ngFor="let option of idCheckOptions" [value]="option.keyName.toString()">{{ option.name }}</option>
           </select>
         </td>
         <td *ngIf="!useGlobalConfiguration">
-          <div *ngIf="signingGroupsLoading" class="fs-signers__loading">
+          <div *ngIf="signingGroupsLoading" class="fs-signers__loading" role="status">
             <fs-icon name="spinner" [spin]="true"></fs-icon> Loading signing groups...
           </div>
           <select *ngIf="!signingGroupsLoading" class="fs-input" [ngModel]="signer.signingGroup || ''"
@@ -92,7 +95,8 @@
         <td *ngIf="showPhoneColumn">
           <input type="text" class="fs-input" *ngIf="isPhoneCheck(signer.idCheck)" [ngModel]="signer.phone"
             [class.fs-input--invalid]="fieldValidator(signer, 'phone')"
-            (ngModelChange)="phoneChange.emit({ signer: signer, value: $event })">
+            (ngModelChange)="phoneChange.emit({ signer: signer, value: $event })"
+            (blur)="phoneCommit.emit(signer)">
         </td>
         <td *ngIf="showFormsIncludedColumn" class="fs-signers__forms-included">
           <ng-container *ngIf="formsIncluded(signer) as forms">

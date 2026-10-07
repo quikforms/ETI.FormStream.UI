@@ -1,9 +1,11 @@
-# Compiled output — build output is scratch and ignored, EXCEPT the distributable bundle,
-# which is committed at each release so it can be served from the public repo via CDN (jsDelivr).
+# Compiled output — build output is scratch and ignored, EXCEPT the distributable bundle and its
+# third-party license notices, which are committed at each release so they can be served from the
+# public repo via CDN (jsDelivr).
 /dist/*
 !/dist/formstream/
 /dist/formstream/*
 !/dist/formstream/formstream-bundle.js
+!/dist/formstream/3rdpartylicenses.txt
 /out-tsc
 
 # Dependencies

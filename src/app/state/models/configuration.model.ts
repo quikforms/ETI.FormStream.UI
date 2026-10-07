@@ -75,7 +75,8 @@ export class Endpoints {
 
         this.esign = {
             signingGroups: configuration.api.esign + 'formstream/docusign/signing-groups',
-            envelopeSign: configuration.api.esign + 'formstream/docusign/envelope/sign'
+            envelopeSign: configuration.api.esign + 'formstream/docusign/envelope/sign',
+            identityVerifications: configuration.api.esign + 'formstream/docusign/identity-verifications'
         };
     }
 }

@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
-import { Observable, Subject } from 'rxjs';
+import { combineLatest, Observable, of, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { DialogRef } from '../../services/dialog/dialog-ref';
 import { BaseDialogComponent } from '../modals/base-dialog.component';
@@ -9,7 +9,11 @@ import { EsignData } from '../../state/models/Response/esign-data.model';
 import { DisplaySigner } from '../../state/models/esign/display-signer.model';
 import { buildDisplaySigners } from '../../state/models/esign/signer-display.builder';
 import { SEND_TYPE_OPTIONS, DocusignSendType } from '../../state/models/esign/esign-send-type.model';
-import { ID_CHECK_OPTIONS } from '../../state/models/esign/esign-auth-type.model';
+import { IdCheckKey } from '../../state/models/esign/esign-auth-type.model';
+import { EsignOption } from '../../state/models/esign/esign-option.model';
+import { buildIdentityVerificationsRequest } from '../../state/models/esign/identity-verifications.model';
+import { TryLoadIdentityVerifications } from '../../state/actions/identity-verifications.actions';
+import { idCheckOptionsWithoutPhoneAuthentication, IdentityVerificationsSelectors } from '../../state/reducers/identity-verifications.reducer';
 import { SigningGroupOption } from '../../state/models/esign/signing-group-option.model';
 import { buildSigningGroupsRequest } from '../../state/models/esign/signing-group.builder';
 import { TryLoadSigningGroups } from '../../state/actions/signing-groups.actions';
@@ -67,7 +71,6 @@ export class SendForSignatureComponent extends BaseDialogComponent<SendForSignat
   private readonly destroyed$ = new Subject<void>();
 
   readonly sendTypeOptions = SEND_TYPE_OPTIONS;
-  readonly idCheckOptions = ID_CHECK_OPTIONS;
   readonly tooltips = ESIGN_TOOLTIPS;
 
   // Signing groups are fetched from DocuSign into the store; the template consumes them via async pipes
@@ -75,6 +78,11 @@ export class SendForSignatureComponent extends BaseDialogComponent<SendForSignat
   signingGroupOptions$!: Observable<SigningGroupOption[]>;
   signingGroupsLoading$!: Observable<boolean>;
   hasSigningGroups$!: Observable<boolean>;
+
+  // The ID Check options depend on whether the DocuSign account supports phone authentication, which is
+  // looked up when the modal opens.
+  idCheckOptions$!: Observable<EsignOption<IdCheckKey>[]>;
+  identityChecksLoading$!: Observable<boolean>;
 
   constructor(public modalRef: DialogRef, private _store: Store<any>, private _actions: Actions) {
     super(modalRef);
@@ -98,10 +106,44 @@ export class SendForSignatureComponent extends BaseDialogComponent<SendForSignat
       this._store.dispatch(new TryLoadSigningGroups(buildSigningGroupsRequest(this.esignData.signSettings)));
     }
 
+    this.loadIdentityChecks();
+
     // Close the modal once the envelope is sent; re-enable "Sign Now" if it fails (the effect shows the
     // success/error notification).
     this._actions.pipe(ofType(SIGN_ENVELOPE_SUCCESS), takeUntil(this.destroyed$)).subscribe(() => this.close());
     this._actions.pipe(ofType(SIGN_ENVELOPE_FAIL), takeUntil(this.destroyed$)).subscribe(() => (this.sending = false));
+  }
+
+  // Asks whether the DocuSign account supports phone authentication, which decides whether "Passcode via
+  // SMS/Voice" is offered. The store keeps one answer per account and is shared by every element on the
+  // page, so this modal reads only the account it asked about. Without a DocuSign connection there is
+  // nothing to ask, and the standard options are offered.
+  private loadIdentityChecks(): void {
+    const request = this.esignData?.vendor === 'Docusign'
+      ? buildIdentityVerificationsRequest(this.esignData.signSettings)
+      : null;
+
+    let hasPhoneAuthentication$: Observable<boolean>;
+    if (request) {
+      const lookup = new TryLoadIdentityVerifications(request);
+      this._store.dispatch(lookup);
+      this.idCheckOptions$ = this._store.select(IdentityVerificationsSelectors.selectIdCheckOptions(lookup.key));
+      this.identityChecksLoading$ = this._store.select(IdentityVerificationsSelectors.selectIdentityVerificationsLoading(lookup.key));
+      hasPhoneAuthentication$ = this._store.select(IdentityVerificationsSelectors.selectHasPhoneAuthentication(lookup.key));
+    } else {
+      this.idCheckOptions$ = of(idCheckOptionsWithoutPhoneAuthentication());
+      this.identityChecksLoading$ = of(false);
+      hasPhoneAuthentication$ = of(false);
+    }
+
+    // Once the answer is in and phone authentication is not supported, nobody keeps the option. Nothing is
+    // retired while the lookup is in flight; Sign Now stays available meanwhile, since the option cannot be
+    // selected before it is offered.
+    combineLatest([this.identityChecksLoading$, hasPhoneAuthentication$])
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe(([loading, hasPhoneAuthentication]) => {
+        if (!loading && !hasPhoneAuthentication) { this.controller.retirePasscodeViaSmsVoice(); }
+      });
   }
 
   ngOnDestroy(): void {
@@ -163,6 +205,7 @@ export class SendForSignatureComponent extends BaseDialogComponent<SendForSignat
   onSendTypeChange(change: SignerFieldChange<DocusignSendType>): void { this.controller.updateSendType(change.signer, change.value); }
   onIdCheckChange(change: SignerFieldChange): void { this.controller.updateIdCheck(change.signer, change.value); }
   onPhoneChange(change: SignerFieldChange): void { this.controller.updatePhone(change.signer, change.value); }
+  onPhoneCommit(signer: DisplaySigner): void { this.controller.commitPhone(signer); }
   onSigningGroupChange(change: SignerFieldChange): void { this.controller.updateSigningGroup(change.signer, change.value); }
 
   // Validates the signers, then assembles the DocuSign envelope from the baseline + the modal's

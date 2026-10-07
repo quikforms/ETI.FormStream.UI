@@ -36,6 +36,19 @@ single self-contained `formstream-bundle.js` under `dist/formstream/`.
 | `npm run build-local` | Development bundle against the local environment config |
 | `npm run watch` | Rebuild and re-bundle on change (development) |
 
+Every build also writes the third-party license notices of everything bundled to
+`dist/formstream/3rdpartylicenses.txt`, which ships next to the bundle.
+
+## Testing
+
+```bash
+npm test
+```
+
+Runs the unit tests (`*.spec.ts`) with Jest. They cover the logic that does not render — models,
+request builders, controllers, and the NgRx reducers and effects — and run on Node, without a browser
+or Angular's TestBed. They are not part of the build.
+
 ## Configuration
 
 The API endpoints are baked into the build. `src/environments/api-config.ts` holds Quik's production
@@ -56,6 +69,7 @@ src/
   main.ts         Bootstraps the element module
   formstream-element.module.ts   Declares the module and defines the custom element
 bundle.js         Concatenates the CLI output into formstream-bundle.js
+jest.config.js    Unit test runner configuration (with tsconfig.spec.json)
 ```
 
 The repository is an Angular workspace. The element ships as an Angular application today; a

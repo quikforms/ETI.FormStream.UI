@@ -21,21 +21,17 @@ export interface PhoneNormalizationResult {
 }
 
 // The one way a signer's phone number is read, shared by validation, display and the request builder so
-// the three always agree on what the number is. Digit-only input that is not a possible US number is
-// retried as an international number, so a full number typed without the + (e.g. 442079460958) is still
-// understood. Pure.
+// the three always agree on what the number is. A number without a leading + is read as a US number
+// (dialing out with 011 also works); an international number needs the +. Digits without a + are never
+// guessed as international: a US number with a digit too many or too few (20255501911, 3125550) is also
+// a real number somewhere else (+20, +31), and a wrong guess sends the passcode to the wrong country.
+// Pure.
 export function normalizeSignerPhone(input: string): PhoneNormalizationResult {
   const raw = (input || '').trim();
   const unusable: PhoneNormalizationResult = { display: raw, nationalNumber: '', countryCallingCode: '', isValid: false };
   if (!raw || /[A-Za-z]/.test(raw)) { return unusable; }
 
-  const hasPlus = raw.startsWith('+');
-  let phoneNumber = parsePhoneNumberFromString(raw, hasPlus ? undefined : DEFAULT_COUNTRY);
-  if (!phoneNumber?.isPossible() && !hasPlus && /^\d+$/.test(raw)) {
-    const asInternational = parsePhoneNumberFromString('+' + raw);
-    if (asInternational?.isPossible()) { phoneNumber = asInternational; }
-  }
-
+  const phoneNumber = parsePhoneNumberFromString(raw, raw.startsWith('+') ? undefined : DEFAULT_COUNTRY);
   if (!phoneNumber?.isPossible()) { return unusable; }
 
   return {

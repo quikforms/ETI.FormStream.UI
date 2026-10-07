@@ -25,12 +25,22 @@ describe('normalizeSignerPhone', () => {
     });
   });
 
-  it('reads a full number typed without the + as international', () => {
-    const result = normalizeSignerPhone('442079460958');
+  it('reads a number dialed out with 011 as international', () => {
+    const result = normalizeSignerPhone('011 44 20 7946 0958');
 
+    expect(result.isValid).toBe(true);
     expect(result.countryCallingCode).toBe('44');
     expect(result.nationalNumber).toBe('2079460958');
-    expect(result.display).toBe('+44 20 7946 0958');
+  });
+
+  // Digits without a + could be a US number with a digit too many or too few, or a real number in another
+  // country; guessing the second sends the passcode to the wrong country.
+  it.each([
+    ['20255501911', 'a US number with an extra digit, which is also a valid number in Egypt (+20)'],
+    ['3125550', 'a partly typed US number, which is also a possible number in the Netherlands (+31)'],
+    ['442079460958', 'a full international number typed without its +']
+  ])('does not guess %p as international: %s', input => {
+    expect(normalizeSignerPhone(input).isValid).toBe(false);
   });
 
   it('keeps the country code for other countries', () => {
@@ -61,7 +71,6 @@ describe('normalizeSignerPhone', () => {
     ['(202) 555-01912'],
     ['2025550191'],
     ['+44 20 7946 0958'],
-    ['442079460958'],
     ['(202'],
     ['1234567']
   ])('reads %p the same when its display is read again', input => {
